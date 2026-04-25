@@ -1,0 +1,9 @@
+[project]
+name = "the-agents-playbook"
+version = "0.1.0"
+description = "Learn how to build agents with The Agents Playbook, a collection of agent recipes and best practices."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "httpx>=0.28.1",
+]
