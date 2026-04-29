@@ -50,12 +50,13 @@ The `providers` package is a typed abstraction over LLM APIs with retry, error h
 - **Types** -- `MessageRequest`, `MessageResponse`, `ToolSpec`, `ToolChoice`, `ResponseFormat`, `ProviderError`, `RetryConfig`, `CredentialPool`, `PoolConfig`, `RequestLog`
 
 ```python
+from the_agents_playbook import settings
 from the_agents_playbook.providers import OpenAIProvider, MessageRequest, InputMessage
 
 provider = OpenAIProvider()
 response = await provider.send_message(
     MessageRequest(
-        model="openai/gpt-4o",
+        model=settings.openai_model,
         messages=[InputMessage(role="user", content="Hello")],
     )
 )

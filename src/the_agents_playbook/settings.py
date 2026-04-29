@@ -8,13 +8,16 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_base_url: str = "https://openrouter.ai/api/v1"
     openai_model: str = "openai/gpt-oss-20b"
+    mock_only: bool = False
 
     @model_validator(mode="after")
     def at_least_one_api_key(self) -> "Settings":
+        if self.mock_only:
+            return self
         keys = [self.openai_api_key]
         if not any(keys):
             raise ValueError(
-                "At least one API key must be set: OPENAI_API_KEY"
+                "At least one API key must be set: OPENAI_API_KEY (or set MOCK_ONLY=true)"
             )
         return self
 

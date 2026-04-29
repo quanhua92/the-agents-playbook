@@ -1,21 +1,16 @@
 """04-react-agent.py — Full ReAct loop: user message → tools → response.
 
-This example shows the Agent in action with a mocked provider.
+This example shows the Agent in action with a real LLM provider.
 The agent receives a prompt, optionally calls tools, and produces
 a final response. Events are streamed in real time.
 
-NOTE: This uses a mocked provider to demonstrate the loop structure
-without requiring an API key. In production, use OpenAIProvider.
+Set MOCK_ONLY=true in .env to run without an API key (uses mock responses).
 """
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
 
-from the_agents_playbook.loop import Agent, AgentConfig, AgentEvent
-from the_agents_playbook.providers.types import (
-    MessageResponse,
-    OutputMessage,
-)
+from the_agents_playbook import settings
+from the_agents_playbook.loop import Agent, AgentConfig
 from the_agents_playbook.tools import Tool, ToolResult, ToolRegistry
 
 
@@ -44,6 +39,13 @@ class EchoTool(Tool):
 
 def make_mock_provider():
     """Create a mock provider that simulates a tool call then text response."""
+    from unittest.mock import AsyncMock
+
+    from the_agents_playbook.providers.types import (
+        MessageResponse,
+        OutputMessage,
+    )
+
     provider = AsyncMock()
     provider.close = AsyncMock()
 
@@ -78,6 +80,15 @@ def make_mock_provider():
     return provider
 
 
+def make_provider():
+    if settings.mock_only:
+        print("NOTE: Running in MOCK_ONLY mode. Set MOCK_ONLY=false to use real LLM.")
+        return make_mock_provider()
+    else:
+        from the_agents_playbook.providers import OpenAIProvider
+        return OpenAIProvider()
+
+
 async def main():
     # --- Set up registry with tools ---
 
@@ -86,9 +97,9 @@ async def main():
     print(f"Registered tools: {registry.list_tools()}")
     print()
 
-    # --- Create agent with mocked provider ---
+    # --- Create agent ---
 
-    provider = make_mock_provider()
+    provider = make_provider()
     agent = Agent(
         provider=provider,
         registry=registry,
@@ -115,7 +126,7 @@ async def main():
 
     # --- Collect into TurnResult ---
 
-    provider2 = make_mock_provider()
+    provider2 = make_provider()
     agent2 = Agent(provider=provider2, registry=registry)
     turn = await agent2.run_turn("Say hello")
 
@@ -126,6 +137,7 @@ async def main():
     print(f"  Error:         {turn.error}")
 
     await agent.close()
+    await provider2.close()
 
 
 if __name__ == "__main__":

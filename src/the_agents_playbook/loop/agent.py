@@ -28,6 +28,7 @@ from ..providers.base import BaseProvider
 from ..providers.types import InputMessage, MessageRequest, ToolChoice
 from ..tools.registry import ToolRegistry
 from .chains import ToolChainer
+from ..settings import settings as app_settings
 from .config import AgentConfig
 from .protocol import AgentEvent, TurnResult
 from .scoring import score_tools
@@ -124,7 +125,7 @@ class Agent:
 
             # Build request
             request = MessageRequest(
-                model="gpt-4o",
+                model=app_settings.openai_model,
                 system=system_prompt or "You are a helpful assistant with access to tools.",
                 messages=messages,
                 tools=tool_specs if tool_specs else [],
