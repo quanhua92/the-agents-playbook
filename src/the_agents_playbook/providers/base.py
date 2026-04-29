@@ -9,6 +9,7 @@ from typing import Any, Callable
 import httpx
 
 from the_agents_playbook.providers.types import (
+    CredentialPool,
     MessageRequest,
     MessageResponse,
     ProviderErrorCode,
@@ -28,10 +29,12 @@ class BaseProvider(ABC):
         retry_config: RetryConfig | None = None,
         provider_name: str = "unknown",
         on_request_log: Callable[[RequestLog], None] | None = None,
+        credential_pool: CredentialPool | None = None,
     ):
         self._retry_config = retry_config or RetryConfig()
         self._provider_name = provider_name
         self._on_request_log = on_request_log
+        self._credential_pool = credential_pool
         self._request_counter = 0
 
     # --- Abstract methods ---
@@ -116,7 +119,8 @@ class BaseProvider(ABC):
             if jitter: delay *= random.uniform(0.5, 1.5)
 
         Only retries if the caught ProviderError has retryable=True
-        AND error.code is in retryable_codes.
+        AND error.code is in retryable_codes. Auto-rotates credentials
+        on AUTH_FAILED when a multi-key pool is configured.
         """
         cfg = self._retry_config
         last_error = None
@@ -126,6 +130,25 @@ class BaseProvider(ABC):
                 return await fn()
             except ProviderError as e:
                 last_error = e
+
+                # Auto-rotate on auth failure if pool available
+                if (
+                    e.code == ProviderErrorCode.AUTH_FAILED
+                    and self._credential_pool
+                    and len(self._credential_pool) > 1
+                ):
+                    old_key = self._credential_pool.current[:8] + "..."
+                    self._credential_pool.rotate()
+                    new_key = self._credential_pool.current[:8] + "..."
+                    logger.warning(
+                        f"Auth failed with key {old_key}, rotated to {new_key}"
+                    )
+                    # Recreate client with new key
+                    if self._client and not self._client.is_closed:
+                        await self._client.aclose()
+                    self._client = None
+                    continue  # retry immediately with new key
+
                 if not e.retryable or e.code not in cfg.retryable_codes:
                     raise
                 if attempt == cfg.max_retries:
@@ -219,11 +242,27 @@ class BaseProvider(ABC):
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is not None and not self._client.is_closed:
             return self._client
+
+        headers = self._build_headers()
+        if self._credential_pool:
+            key_header, key_value = self._build_auth_from_pool()
+            headers[key_header] = key_value
+
         self._client = httpx.AsyncClient(
-            headers=self._build_headers(),
+            headers=headers,
             timeout=httpx.Timeout(10.0, connect=5.0, read=120.0, write=10.0, pool=10.0),
         )
         return self._client
+
+    def _build_auth_from_pool(self) -> tuple[str, str]:
+        """Return (header_name, header_value) from the credential pool.
+
+        Override in subclasses for provider-specific auth headers.
+        Default: Bearer token (OpenAI-compatible).
+        """
+        if not self._credential_pool:
+            raise ProviderError("No credential pool configured")
+        return ("Authorization", f"Bearer {self._credential_pool.current}")
 
     async def close(self):
         if self._client and not self._client.is_closed:

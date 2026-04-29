@@ -1,9 +1,13 @@
+import itertools
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from time import monotonic
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+_pool_logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +88,43 @@ class RequestLog:
     cost_usd: float | None = None
     retry_count: int = 0
     timestamp: float = field(default_factory=monotonic)
+
+
+# ---------------------------------------------------------------------------
+# Credential rotation
+# ---------------------------------------------------------------------------
+
+
+class CredentialPool:
+    """Manages multiple API keys with automatic rotation on failure.
+
+    Usage:
+        pool = CredentialPool(keys=["key-1", "key-2", "key-3"])
+        pool.current  # "key-1"
+        pool.rotate() # "key-2"
+        pool.rotate() # "key-3"
+        pool.rotate() # "key-1"  (wraps around)
+    """
+
+    def __init__(self, keys: list[str]):
+        if not keys:
+            raise ValueError("CredentialPool requires at least one key")
+        self._keys = list(keys)
+        self._cycle = itertools.cycle(range(len(keys)))
+        self._index = next(self._cycle)
+
+    @property
+    def current(self) -> str:
+        return self._keys[self._index]
+
+    def rotate(self) -> str:
+        """Move to the next key and return it."""
+        self._index = next(self._cycle)
+        _pool_logger.info(f"Rotated to credential index {self._index}")
+        return self.current
+
+    def __len__(self) -> int:
+        return len(self._keys)
 
 
 class InputMessage(BaseModel):

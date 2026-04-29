@@ -1,5 +1,6 @@
 from the_agents_playbook.providers.openai import OpenAIProvider
 from the_agents_playbook.providers.types import (
+    CredentialPool,
     InputMessage,
     MessageRequest,
     MessageResponse,
@@ -14,6 +15,7 @@ from the_agents_playbook.providers.types import (
 )
 
 __all__ = [
+    "CredentialPool",
     "InputMessage",
     "MessageRequest",
     "MessageResponse",
