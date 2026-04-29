@@ -41,6 +41,27 @@ class OpenAIProvider(BaseProvider):
                 "include_reasoning": True,
             },
         }
+
+        if request.tools:
+            body["tools"] = [t.to_api_dict() for t in request.tools]
+
+        if request.tool_choice:
+            body["tool_choice"] = request.tool_choice.to_api_dict()
+
+        if request.response_format:
+            rf = request.response_format
+            if rf.type == "json_schema" and rf.json_schema:
+                body["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": rf.json_schema_name,
+                        "strict": rf.strict,
+                        "schema": rf.json_schema,
+                    },
+                }
+            elif rf.type == "json_object":
+                body["response_format"] = {"type": "json_object"}
+
         return body
 
     def _parse_response(self, response: httpx.Response) -> MessageResponse:
@@ -53,7 +74,7 @@ class OpenAIProvider(BaseProvider):
         output = MessageResponse(
             message=OutputMessage(
                 role=message["role"],
-                content=message["content"],
+                content=message.get("content"),
                 reasoning=message.get("reasoning"),
                 tool_calls=message.get("tool_calls", []),
             ),
