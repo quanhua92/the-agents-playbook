@@ -1,4 +1,6 @@
+from dataclasses import dataclass, field
 from enum import Enum
+from time import monotonic
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -58,6 +60,30 @@ class RetryConfig(BaseModel):
             ProviderErrorCode.CONNECTION_FAILED,
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# Request logging
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class RequestLog:
+    """Structured log entry for a single LLM request."""
+
+    request_id: str
+    provider: str
+    model: str
+    endpoint: str
+    status_code: int | None = None
+    error_code: ProviderErrorCode | None = None
+    error_message: str | None = None
+    duration_ms: float | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cost_usd: float | None = None
+    retry_count: int = 0
+    timestamp: float = field(default_factory=monotonic)
 
 
 class InputMessage(BaseModel):

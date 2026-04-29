@@ -3,7 +3,8 @@ import json
 import logging
 import random
 from abc import ABC, abstractmethod
-from typing import Any
+from time import monotonic
+from typing import Any, Callable
 
 import httpx
 
@@ -12,6 +13,7 @@ from the_agents_playbook.providers.types import (
     MessageResponse,
     ProviderErrorCode,
     ProviderError,
+    RequestLog,
     RetryConfig,
 )
 
@@ -21,8 +23,16 @@ logger = logging.getLogger(__name__)
 class BaseProvider(ABC):
     _client: httpx.AsyncClient | None = None
 
-    def __init__(self, retry_config: RetryConfig | None = None):
+    def __init__(
+        self,
+        retry_config: RetryConfig | None = None,
+        provider_name: str = "unknown",
+        on_request_log: Callable[[RequestLog], None] | None = None,
+    ):
         self._retry_config = retry_config or RetryConfig()
+        self._provider_name = provider_name
+        self._on_request_log = on_request_log
+        self._request_counter = 0
 
     # --- Abstract methods ---
     @abstractmethod
@@ -49,12 +59,53 @@ class BaseProvider(ABC):
     async def _do_send(self, request: MessageRequest) -> MessageResponse:
         client = await self._get_client()
         body = self._build_body(request)
+        log = RequestLog(
+            request_id=f"{self._provider_name}-{self._request_counter}",
+            provider=self._provider_name,
+            model=request.model,
+            endpoint=self._chat_endpoint(),
+        )
+        self._request_counter += 1
+
         logger.info(
             f"Sending request to {self._chat_endpoint()} with body: {json.dumps(body, indent=2)}"
         )
-        response = await client.post(self._chat_endpoint(), json=body)
-        self._check_status(response)
-        return self._parse_response(response)
+
+        start = monotonic()
+        try:
+            response = await client.post(self._chat_endpoint(), json=body)
+            self._check_status(response)
+            parsed = self._parse_response(response)
+
+            log.status_code = response.status_code
+            log.duration_ms = (monotonic() - start) * 1000
+
+            self._emit_log(log)
+            return parsed
+
+        except ProviderError as e:
+            log.status_code = e.status_code
+            log.error_code = e.code
+            log.error_message = str(e)
+            log.duration_ms = (monotonic() - start) * 1000
+            self._emit_log(log)
+            raise
+
+    # --- Request log emission ---
+    def _emit_log(self, log: RequestLog) -> None:
+        """Fire the on_request_log callback if set, otherwise log to Python logger."""
+        if self._on_request_log:
+            self._on_request_log(log)
+        else:
+            if log.error_code:
+                logger.warning(
+                    f"[{log.request_id}] {log.error_code.value} ({log.status_code}) "
+                    f"in {log.duration_ms:.0f}ms: {log.error_message}"
+                )
+            else:
+                logger.info(
+                    f"[{log.request_id}] {log.status_code} in {log.duration_ms:.0f}ms"
+                )
 
     # --- Retry with exponential backoff + jitter ---
     async def _with_retry(self, fn):
