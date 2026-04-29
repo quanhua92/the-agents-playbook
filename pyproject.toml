@@ -13,6 +13,11 @@ dependencies = [
 [tool.uv]
 package = true
 
+[tool.uv.workspace]
+members = [
+    "langgraph-examples",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
