@@ -7,10 +7,24 @@ Build AI Agents from scratch, one concept at a time.
 ```
 the-agents-playbook/
 ├── 01-basic-calls/          # Playground examples (run directly)
+├── 02-tools/                # Tool protocol, registry, dispatcher, builtins, cache, MCP
+├── 03-memory/               # Dual memory, vector search, consolidation, session
+├── 04-context/              # Context layers, templates, metadata injection, builder
+├── 05-the-loop/             # Agent loop, entropy scoring, tool chaining
+├── 06-human-in-the-loop/    # Permissions, prompters, hooks, ask-user
+├── 07-workflows/            # Steps, DAG runner, state, concurrent execution
+├── 08-the-claw/             # Self-repair, degradation, evaluation, self-review
 ├── src/                     # SDK package (the_agents_playbook)
 │   └── the_agents_playbook/
 │       ├── providers/       # LLM provider abstraction (BaseProvider, OpenAIProvider)
-│       ├── utils/           # Shared utilities
+│       ├── tools/           # Tool protocol, registry, dispatcher, builtins, cache, MCP
+│       ├── memory/          # Dual file, vector store, consolidation, session
+│       ├── context/         # Context builder, layers, templates, metadata
+│       ├── loop/            # Agent, ReAct loop, scoring, chains
+│       ├── guardrails/      # Permissions, prompters, hooks, ask-user
+│       ├── workflows/       # Steps, workflow DAG, state, hooks
+│       ├── claw/            # Self-repair, degradation, evaluation, self-review
+│       ├── utils/           # Shared utilities (schema, vectors)
 │       └── settings.py      # Env-based configuration
 ├── tests/                   # SDK test suite (unit + integration)
 └── ROADMAP.md               # Architecture blueprint
@@ -88,6 +102,7 @@ All settings are loaded from `.env` via `pydantic-settings`:
 OPENAI_API_KEY=sk-or-v1-...
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=openai/gpt-oss-20b
+MOCK_ONLY=false
 ```
 
 ## License
