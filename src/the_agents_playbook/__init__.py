@@ -4,11 +4,13 @@ from .guardrails import HookSystem, PermissionMiddleware, RiskLevel
 from .loop import Agent, AgentConfig, AgentEvent
 from .memory import Fact
 from .tools import Tool, ToolResult, ToolRegistry
+from .workflows import BaseStep, StepResult, Workflow, WorkflowState
 
 __all__ = [
     "Agent",
     "AgentConfig",
     "AgentEvent",
+    "BaseStep",
     "ContextBuilder",
     "ContextLayer",
     "Fact",
@@ -17,8 +19,10 @@ __all__ = [
     "PermissionMiddleware",
     "RiskLevel",
     "Settings",
-    "settings",
+    "StepResult",
     "Tool",
     "ToolResult",
     "ToolRegistry",
+    "Workflow",
+    "WorkflowState",
 ]
