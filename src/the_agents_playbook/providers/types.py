@@ -206,6 +206,7 @@ class MessageRequest(BaseModel):
     tools: list[ToolSpec] = Field(default_factory=list)
     tool_choice: ToolChoice | None = None
     response_format: ResponseFormat | None = None
+    timeout_seconds: float | None = Field(default=None, ge=1.0, le=600.0)
 
 
 class MessageResponse(BaseModel):

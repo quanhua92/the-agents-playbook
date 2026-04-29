@@ -79,7 +79,18 @@ class BaseProvider(ABC):
 
         start = monotonic()
         try:
-            response = await client.post(self._chat_endpoint(), json=body)
+            timeout = None
+            if request.timeout_seconds:
+                timeout = httpx.Timeout(
+                    connect=10.0,
+                    read=request.timeout_seconds,
+                    write=10.0,
+                    pool=10.0,
+                )
+
+            response = await client.post(
+                self._chat_endpoint(), json=body, timeout=timeout
+            )
             self._check_status(response)
             parsed = self._parse_response(response)
 
