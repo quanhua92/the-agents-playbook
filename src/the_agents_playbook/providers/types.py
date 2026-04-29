@@ -38,6 +38,28 @@ class ProviderError(Exception):
         self.raw_body = raw_body
 
 
+# ---------------------------------------------------------------------------
+# Retry configuration
+# ---------------------------------------------------------------------------
+
+
+class RetryConfig(BaseModel):
+    """Controls retry behavior for transient provider errors."""
+
+    max_retries: int = Field(default=3, ge=0)
+    base_delay: float = Field(default=1.0, gt=0)
+    max_delay: float = Field(default=30.0, gt=0)
+    jitter: bool = Field(default=True)
+    retryable_codes: set[ProviderErrorCode] = Field(
+        default_factory=lambda: {
+            ProviderErrorCode.RATE_LIMITED,
+            ProviderErrorCode.SERVER_ERROR,
+            ProviderErrorCode.TIMEOUT,
+            ProviderErrorCode.CONNECTION_FAILED,
+        }
+    )
+
+
 class InputMessage(BaseModel):
     role: Literal["user", "assistant"] = "assistant"
     content: str

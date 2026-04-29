@@ -7,6 +7,7 @@ from the_agents_playbook.providers.types import (
     ProviderError,
     ProviderErrorCode,
     ResponseFormat,
+    RetryConfig,
     ToolChoice,
     ToolSpec,
 )
@@ -20,6 +21,7 @@ __all__ = [
     "ProviderError",
     "ProviderErrorCode",
     "ResponseFormat",
+    "RetryConfig",
     "ToolChoice",
     "ToolSpec",
 ]
