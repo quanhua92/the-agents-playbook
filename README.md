@@ -61,6 +61,7 @@ The `providers` package is a typed abstraction over LLM APIs with retry, error h
 
 - **`BaseProvider`** -- Abstract base with typed error hierarchy, exponential backoff retry, request logging, API key rotation, connection pool limits, and per-request timeout overrides
 - **`OpenAIProvider`** -- Concrete implementation for OpenAI-compatible APIs (OpenRouter, etc.)
+- **`AnthropicProvider`** -- Concrete implementation for Anthropic Messages API
 - **Types** -- `MessageRequest`, `MessageResponse`, `ToolSpec`, `ToolChoice`, `ResponseFormat`, `ProviderError`, `RetryConfig`, `CredentialPool`, `PoolConfig`, `RequestLog`
 
 ```python
@@ -102,6 +103,15 @@ All settings are loaded from `.env` via `pydantic-settings`:
 OPENAI_API_KEY=sk-or-v1-...
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
 OPENAI_MODEL=openai/gpt-oss-20b
+
+ANTHROPIC_API_KEY=sk-ant-...
+ANTHROPIC_BASE_URL=https://api.anthropic.com/v1
+ANTHROPIC_MODEL=claude-sonnet-4-6
+
+EMBEDDING_API_KEY=sk-...
+EMBEDDING_BASE_URL=https://api.openai.com/v1
+EMBEDDING_MODEL=text-embedding-3-small
+
 MOCK_ONLY=false
 ```
 
