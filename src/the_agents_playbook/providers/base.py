@@ -12,6 +12,7 @@ from the_agents_playbook.providers.types import (
     CredentialPool,
     MessageRequest,
     MessageResponse,
+    PoolConfig,
     ProviderErrorCode,
     ProviderError,
     RequestLog,
@@ -30,11 +31,13 @@ class BaseProvider(ABC):
         provider_name: str = "unknown",
         on_request_log: Callable[[RequestLog], None] | None = None,
         credential_pool: CredentialPool | None = None,
+        pool_config: PoolConfig | None = None,
     ):
         self._retry_config = retry_config or RetryConfig()
         self._provider_name = provider_name
         self._on_request_log = on_request_log
         self._credential_pool = credential_pool
+        self._pool_config = pool_config
         self._request_counter = 0
 
     # --- Abstract methods ---
@@ -248,9 +251,15 @@ class BaseProvider(ABC):
             key_header, key_value = self._build_auth_from_pool()
             headers[key_header] = key_value
 
+        pool = self._pool_config or PoolConfig()
         self._client = httpx.AsyncClient(
             headers=headers,
             timeout=httpx.Timeout(10.0, connect=5.0, read=120.0, write=10.0, pool=10.0),
+            limits=httpx.Limits(
+                max_connections=pool.max_connections,
+                max_keepalive_connections=pool.max_keepalive_connections,
+                keepalive_expiry=pool.keepalive_expiry,
+            ),
         )
         return self._client
 

@@ -127,6 +127,19 @@ class CredentialPool:
         return len(self._keys)
 
 
+# ---------------------------------------------------------------------------
+# Connection pool configuration
+# ---------------------------------------------------------------------------
+
+
+class PoolConfig(BaseModel):
+    """Controls HTTP connection pool behavior."""
+
+    max_connections: int = Field(default=10, gt=0)
+    max_keepalive_connections: int = Field(default=5, gt=0)
+    keepalive_expiry: float = Field(default=30.0, ge=0)
+
+
 class InputMessage(BaseModel):
     role: Literal["user", "assistant"] = "assistant"
     content: str
