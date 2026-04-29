@@ -101,3 +101,109 @@ class SessionPersistence:
         if not dir_path.exists():
             return []
         return sorted(dir_path.glob("*.jsonl"))
+
+
+class SessionCompactor:
+    """Token-aware session compaction.
+
+    When a conversation exceeds a token threshold, old messages are
+    summarized into a single summary message to free up context space.
+    Always keeps the most recent messages intact.
+
+    Usage:
+        compactor = SessionCompactor(max_tokens=4000, keep_recent=4)
+        compacted = compactor.compact(messages)
+    """
+
+    # Rough token estimate: ~4 characters per token for English text.
+    CHARS_PER_TOKEN: float = 4.0
+
+    def __init__(
+        self,
+        max_tokens: int = 8000,
+        keep_recent: int = 4,
+        summarize_fn=None,
+    ):
+        """Initialize compactor.
+
+        Args:
+            max_tokens: Approximate token budget for the full message list.
+            keep_recent: Number of most-recent messages to preserve verbatim.
+            summarize_fn: Optional async callable(messages) -> str.
+                If provided, old messages are summarized via this function.
+                If None, old messages are simply concatenated into a summary.
+        """
+        self._max_tokens = max_tokens
+        self._keep_recent = keep_recent
+        self._summarize_fn = summarize_fn
+
+    @staticmethod
+    def estimate_tokens(messages: list[dict[str, Any]]) -> int:
+        """Rough token count for a list of messages.
+
+        Uses the ~4 chars/token heuristic. Counts role, content,
+        and any other string fields.
+        """
+        total_chars = 0
+        for msg in messages:
+            for value in msg.values():
+                if isinstance(value, str):
+                    total_chars += len(value)
+        return int(total_chars / SessionCompactor.CHARS_PER_TOKEN)
+
+    def compact(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Compact messages if they exceed the token threshold.
+
+        If under budget, returns messages unchanged.
+        If over budget, summarizes old messages and keeps recent ones intact.
+        """
+        if len(messages) <= self._keep_recent:
+            return messages
+
+        tokens = self.estimate_tokens(messages)
+        if tokens <= self._max_tokens:
+            return messages
+
+        old = messages[: -self._keep_recent]
+        recent = messages[-self._keep_recent:]
+
+        summary_content = self._build_summary(old)
+        summary_msg = {
+            "role": "user",
+            "content": f"[Conversation summary] {summary_content}",
+        }
+
+        logger.info(
+            "Compacted session: %d messages (%d tokens) -> %d messages",
+            len(messages),
+            tokens,
+            len(recent) + 1,
+        )
+
+        return [summary_msg] + recent
+
+    def _build_summary(self, messages: list[dict[str, Any]]) -> str:
+        """Build a summary from old messages.
+
+        Concatenates message roles and content into a compact text block.
+        """
+        parts: list[str] = []
+        for msg in messages:
+            role = msg.get("role", "unknown")
+            content = msg.get("content", "")
+            if isinstance(content, str) and content:
+                # Truncate very long individual messages
+                if len(content) > 500:
+                    content = content[:500] + "..."
+                parts.append(f"{role}: {content}")
+
+        if not parts:
+            return "(no prior messages)"
+
+        text = "\n".join(parts)
+        # Cap the summary length to avoid it being too large itself
+        max_chars = int(self._max_tokens * self.CHARS_PER_TOKEN * 0.5)
+        if len(text) > max_chars:
+            text = text[:max_chars] + "\n...(truncated)"
+
+        return text
