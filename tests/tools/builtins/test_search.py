@@ -3,6 +3,7 @@
 import json
 from unittest.mock import AsyncMock, patch
 
+import httpx
 import pytest
 import respx
 
@@ -24,7 +25,7 @@ async def test_search_returns_results():
     }
 
     respx.get("https://api.duckduckgo.com").mock(
-        return_value=respx.Response(200, json=mock_response)
+        return_value=httpx.Response(200, json=mock_response)
     )
 
     tool = WebSearchTool()
@@ -38,7 +39,7 @@ async def test_search_returns_results():
 @respx.mock
 async def test_search_no_results():
     respx.get("https://api.duckduckgo.com").mock(
-        return_value=respx.Response(200, json={"Abstract": "", "RelatedTopics": []})
+        return_value=httpx.Response(200, json={"Abstract": "", "RelatedTopics": []})
     )
 
     tool = WebSearchTool()
@@ -59,7 +60,7 @@ async def test_search_max_results():
     }
 
     respx.get("https://api.duckduckgo.com").mock(
-        return_value=respx.Response(200, json=mock_response)
+        return_value=httpx.Response(200, json=mock_response)
     )
 
     tool = WebSearchTool()
@@ -75,7 +76,7 @@ async def test_search_max_results():
 @respx.mock
 async def test_search_timeout():
     respx.get("https://api.duckduckgo.com").mock(
-        side_effect=respx.Response(408)
+        side_effect=httpx.Response(408)
     )
 
     tool = WebSearchTool(timeout_seconds=0.001)

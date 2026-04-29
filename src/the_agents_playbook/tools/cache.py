@@ -24,7 +24,7 @@ class ToolResultCache:
     """
 
     def __init__(self, default_ttl: float = 60.0) -> None:
-        self._store: dict[str, tuple[ToolResult, float]] = {}
+        self._store: dict[str, tuple[ToolResult, float, float]] = {}
         self._default_ttl = default_ttl
 
     def _make_key(self, tool_name: str, arguments: dict[str, Any]) -> str:
@@ -45,10 +45,10 @@ class ToolResultCache:
         if entry is None:
             return None
 
-        result, timestamp = entry
+        result, timestamp, ttl = entry
         age = monotonic() - timestamp
 
-        if age > self._default_ttl:
+        if age > ttl:
             del self._store[key]
             logger.debug("Cache expired for %s (age=%.1fs)", key, age)
             return None
@@ -65,7 +65,8 @@ class ToolResultCache:
     ) -> None:
         """Store a result in the cache with an optional per-entry TTL override."""
         key = self._make_key(tool_name, arguments)
-        self._store[key] = (result, monotonic())
+        effective_ttl = ttl if ttl is not None else self._default_ttl
+        self._store[key] = (result, monotonic(), effective_ttl)
         logger.debug(
             "Cached result for %s (ttl=%.1fs)", key, ttl or self._default_ttl
         )
@@ -75,8 +76,8 @@ class ToolResultCache:
         now = monotonic()
         expired_keys = [
             key
-            for key, (_, timestamp) in self._store.items()
-            if now - timestamp > self._default_ttl
+            for key, (_, timestamp, ttl) in self._store.items()
+            if now - timestamp > ttl
         ]
         for key in expired_keys:
             del self._store[key]
