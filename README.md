@@ -1,39 +1,94 @@
 # The Agents Playbook
 
-A collection of agent recipes and best practices.
+Build AI Agents from scratch, one concept at a time.
+
+## Project Layout
+
+```
+the-agents-playbook/
+├── 01-basic-calls/          # Playground examples (run directly)
+├── src/                     # SDK package (the_agents_playbook)
+│   └── the_agents_playbook/
+│       ├── providers/       # LLM provider abstraction (BaseProvider, OpenAIProvider)
+│       ├── utils/           # Shared utilities
+│       └── settings.py      # Env-based configuration
+├── tests/                   # SDK test suite (unit + integration)
+└── ROADMAP.md               # Architecture blueprint
+```
 
 ## Setup
 
 ```bash
 uv sync
+cp .env.example .env   # fill in your API key
 ```
 
-## Environment
+## Playground Examples
 
-Copy the example env file and fill in your API key:
+The `01-basic-calls/` directory contains self-contained scripts you can run to learn each concept. Each script defines its types inline -- they do not import from the SDK. They are designed to be read top-to-bottom to understand the mechanics before using the SDK.
 
-```bash
-cp .env.example .env
-```
+| File | Concept |
+|------|---------|
+| `01-async-httpx.py` | Async HTTP with httpx (no LLM) |
+| `02-basic-chat.py` | Raw chat completion against the OpenAI-compatible API |
+| `03-structured-output.py` | `response_format: json_schema` with Pydantic model validation and `$ref` flattening |
+| `04-tool-choice.py` | Forced tool calls via `tool_choice` as an alternative to structured output |
+| `05-providers.py` | Building a provider abstraction from scratch: ABC, typed request/response, tool specs, and structured output wired together |
 
-Edit `.env` with your OpenRouter key:
-
-```
-OPENAI_API_KEY=sk-or-v1-your-actual-key
-OPENAI_BASE_URL=https://openrouter.ai/api/v1
-```
-
-## Running Scripts
-
-Run from the project root:
+Run any example:
 
 ```bash
 uv run python 01-basic-calls/02-basic-chat.py
 ```
 
-Or activate the venv and use `python` directly:
+## SDK (`src/`)
+
+The `providers` package is a typed abstraction over LLM APIs with retry, error handling, logging, and key rotation built in:
+
+- **`BaseProvider`** -- Abstract base with typed error hierarchy, exponential backoff retry, request logging, API key rotation, connection pool limits, and per-request timeout overrides
+- **`OpenAIProvider`** -- Concrete implementation for OpenAI-compatible APIs (OpenRouter, etc.)
+- **Types** -- `MessageRequest`, `MessageResponse`, `ToolSpec`, `ToolChoice`, `ResponseFormat`, `ProviderError`, `RetryConfig`, `CredentialPool`, `PoolConfig`, `RequestLog`
+
+```python
+from the_agents_playbook.providers import OpenAIProvider, MessageRequest, InputMessage
+
+provider = OpenAIProvider()
+response = await provider.send_message(
+    MessageRequest(
+        model="openai/gpt-4o",
+        messages=[InputMessage(role="user", content="Hello")],
+    )
+)
+```
+
+## Tests
 
 ```bash
-source .venv/bin/activate
-python 01-basic-calls/02-basic-chat.py
+# Unit tests (no API key needed)
+uv run pytest tests/
+
+# Integration tests (requires API key in .env)
+uv run pytest tests/ -m openai
+
+# All tests
+uv run pytest tests/ -m ""
+
+# Verbose with coverage
+uv run pytest tests/ -v --cov=src --cov-report=term-missing
 ```
+
+See `tests/README.md` for full documentation of the test suite.
+
+## Configuration
+
+All settings are loaded from `.env` via `pydantic-settings`:
+
+```
+OPENAI_API_KEY=sk-or-v1-...
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_MODEL=openai/gpt-oss-20b
+```
+
+## License
+
+MIT
