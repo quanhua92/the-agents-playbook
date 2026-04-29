@@ -26,6 +26,7 @@ the-agents-playbook/
 │       ├── claw/            # Self-repair, degradation, evaluation, self-review
 │       ├── utils/           # Shared utilities (schema, vectors)
 │       └── settings.py      # Env-based configuration
+├── langgraph-examples/      # Same concepts using LangGraph/LangChain
 ├── tests/                   # SDK test suite (505 unit + integration tests)
 └── TODO-FINAL.md            # Completion tracker
 ```
@@ -128,6 +129,30 @@ warnings = validate_config()
 # Returns list of warnings (empty = all good)
 # Checks: API key prefixes, key/URL mismatches, embedding config
 ```
+
+## LangGraph Examples
+
+The `langgraph-examples/` folder replicates every concept from the chapters above using [LangGraph](https://langchain-ai.github.io/langgraph/) and [LangChain](https://python.langchain.com/). It answers the question: *"Now that I understand how it works under the hood, how do I do this in practice?"*
+
+Each chapter mirrors a root chapter with side-by-side concept mapping:
+
+| Root (from scratch) | LangGraph Equivalent |
+|---|---|
+| `BaseProvider` + raw httpx | `ChatOpenAI` / `ChatAnthropic` |
+| `Tool` ABC + `ToolRegistry` | `@tool` decorator + `ToolNode` |
+| `Agent` class (240-line ReAct loop) | `create_react_agent` (one call) |
+| `SessionPersistence` (JSONL) | `MemorySaver` checkpointing |
+| `Workflow` (DAG runner) | `StateGraph` + conditional edges |
+| `PermissionMiddleware` + `RiskLevel` | `interrupt()` + `Command` |
+| `RepairLoop` (retry wrapper) | Graph edge looping back |
+
+```bash
+cd langgraph-examples
+uv sync
+bash run_all.sh   # runs all 24 examples, reports pass/fail
+```
+
+See `langgraph-examples/README.md` for the full breakdown.
 
 ## Tests
 
