@@ -1,4 +1,4 @@
-from .settings import Settings, settings
+from .settings import Settings, settings, validate_config
 from .claw import DegradationManager, RepairLoop, SelfReviewer
 from .context import ContextBuilder, ContextLayer, LayerPriority
 from .guardrails import HookSystem, PermissionMiddleware, RiskLevel
@@ -23,6 +23,7 @@ __all__ = [
     "RiskLevel",
     "SelfReviewer",
     "Settings",
+    "validate_config",
     "StepResult",
     "Tool",
     "ToolResult",
