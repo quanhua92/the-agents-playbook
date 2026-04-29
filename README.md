@@ -108,9 +108,9 @@ ANTHROPIC_API_KEY=sk-ant-...
 ANTHROPIC_BASE_URL=https://api.anthropic.com/v1
 ANTHROPIC_MODEL=claude-sonnet-4-6
 
-EMBEDDING_API_KEY=sk-...
-EMBEDDING_BASE_URL=https://api.openai.com/v1
-EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_API_KEY=sk-or-v1-...
+EMBEDDING_BASE_URL=https://openrouter.ai/api/v1
+EMBEDDING_MODEL=openai/text-embedding-3-small
 
 MOCK_ONLY=false
 ```

@@ -15,10 +15,10 @@ class Settings(BaseSettings):
     anthropic_base_url: str = "https://api.anthropic.com/v1"
     anthropic_model: str = "claude-sonnet-4-6"
 
-    # Embeddings
+    # Embeddings via OpenRouter
     embedding_api_key: str = ""
-    embedding_base_url: str = "https://api.openai.com/v1"
-    embedding_model: str = "text-embedding-3-small"
+    embedding_base_url: str = "https://openrouter.ai/api/v1"
+    embedding_model: str = "openai/text-embedding-3-small"
 
     # General
     mock_only: bool = False
