@@ -1,4 +1,5 @@
 from .settings import Settings, settings
+from .claw import DegradationManager, RepairLoop, SelfReviewer
 from .context import ContextBuilder, ContextLayer, LayerPriority
 from .guardrails import HookSystem, PermissionMiddleware, RiskLevel
 from .loop import Agent, AgentConfig, AgentEvent
@@ -13,11 +14,14 @@ __all__ = [
     "BaseStep",
     "ContextBuilder",
     "ContextLayer",
+    "DegradationManager",
     "Fact",
     "HookSystem",
     "LayerPriority",
     "PermissionMiddleware",
+    "RepairLoop",
     "RiskLevel",
+    "SelfReviewer",
     "Settings",
     "StepResult",
     "Tool",
