@@ -118,7 +118,7 @@ class DualFileMemory(BaseMemoryProvider):
         self._append_history(history_entry)
 
         # Update MEMORY.md — read existing, add new, deduplicate by content
-        existing = self._read_facts()
+        existing = self.read_facts()
         content_set = {f.content for f in existing}
 
         if fact.content not in content_set:
