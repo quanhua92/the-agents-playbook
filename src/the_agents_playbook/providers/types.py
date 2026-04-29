@@ -1,6 +1,41 @@
+from enum import Enum
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+
+# ---------------------------------------------------------------------------
+# Error hierarchy
+# ---------------------------------------------------------------------------
+
+
+class ProviderErrorCode(str, Enum):
+    AUTH_FAILED = "auth_failed"
+    RATE_LIMITED = "rate_limited"
+    SERVER_ERROR = "server_error"
+    CONTEXT_TOO_LONG = "context_too_long"
+    BAD_REQUEST = "bad_request"
+    TIMEOUT = "timeout"
+    CONNECTION_FAILED = "connection_failed"
+    UNKNOWN = "unknown"
+
+
+class ProviderError(Exception):
+    """Base error for all provider failures."""
+
+    def __init__(
+        self,
+        message: str,
+        code: ProviderErrorCode = ProviderErrorCode.UNKNOWN,
+        status_code: int | None = None,
+        retryable: bool = False,
+        raw_body: dict | None = None,
+    ):
+        super().__init__(message)
+        self.code = code
+        self.status_code = status_code
+        self.retryable = retryable
+        self.raw_body = raw_body
 
 
 class InputMessage(BaseModel):

@@ -5,7 +5,14 @@ from typing import Any
 
 import httpx
 
-from the_agents_playbook.providers.types import MessageRequest, MessageResponse
+from the_agents_playbook.providers.types import (
+    MessageRequest,
+    MessageResponse,
+    ProviderErrorCode,
+    ProviderError,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class BaseProvider(ABC):
@@ -32,15 +39,68 @@ class BaseProvider(ABC):
     async def send_message(self, request: MessageRequest) -> MessageResponse:
         client = await self._get_client()
         body = self._build_body(request)
-        logging.info(
+        logger.info(
             f"Client configured with base URL: {client.base_url} and headers: {client.headers}"
         )
-        logging.info(
+        logger.info(
             f"Sending request to {self._chat_endpoint()} with body: {json.dumps(body, indent=2)}"
         )
         response = await client.post(self._chat_endpoint(), json=body)
-        response.raise_for_status()
+        self._check_status(response)
         return self._parse_response(response)
+
+    # --- Error classification ---
+    def _check_status(self, response: httpx.Response) -> None:
+        """Map HTTP status to typed ProviderError. Raises on non-2xx."""
+        status = response.status_code
+        if 200 <= status < 300:
+            return
+
+        try:
+            body = response.json()
+        except Exception:
+            body = None
+
+        if status in (401, 403):
+            raise ProviderError(
+                f"Authentication failed: {body}",
+                code=ProviderErrorCode.AUTH_FAILED,
+                status_code=status,
+                retryable=False,
+                raw_body=body,
+            )
+        elif status == 429:
+            raise ProviderError(
+                f"Rate limited: {body}",
+                code=ProviderErrorCode.RATE_LIMITED,
+                status_code=status,
+                retryable=True,
+                raw_body=body,
+            )
+        elif status == 400:
+            raise ProviderError(
+                f"Bad request: {body}",
+                code=ProviderErrorCode.BAD_REQUEST,
+                status_code=status,
+                retryable=False,
+                raw_body=body,
+            )
+        elif status >= 500:
+            raise ProviderError(
+                f"Server error {status}: {body}",
+                code=ProviderErrorCode.SERVER_ERROR,
+                status_code=status,
+                retryable=True,
+                raw_body=body,
+            )
+        else:
+            raise ProviderError(
+                f"Unexpected HTTP {status}: {body}",
+                code=ProviderErrorCode.UNKNOWN,
+                status_code=status,
+                retryable=False,
+                raw_body=body,
+            )
 
     # -- Helpers ---
     # -- HTTP client management ---
