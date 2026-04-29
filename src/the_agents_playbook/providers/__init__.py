@@ -1,3 +1,4 @@
+from the_agents_playbook.providers.anthropic import AnthropicProvider
 from the_agents_playbook.providers.openai import OpenAIProvider
 from the_agents_playbook.providers.types import (
     CredentialPool,
@@ -16,6 +17,7 @@ from the_agents_playbook.providers.types import (
 )
 
 __all__ = [
+    "AnthropicProvider",
     "CredentialPool",
     "InputMessage",
     "MessageRequest",
