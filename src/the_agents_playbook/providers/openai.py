@@ -11,6 +11,7 @@ from the_agents_playbook.providers.types import (
     MessageRequest,
     MessageResponse,
     OutputMessage,
+    ResponseChunk,
 )
 
 
@@ -82,6 +83,50 @@ class OpenAIProvider(BaseProvider):
         )
         logging.info(f"Received response from OpenAI API: {output}")
         return output
+
+    # --- Streaming ---
+
+    def _build_stream_body(self, request: MessageRequest) -> dict[str, Any]:
+        body = self._build_body(request)
+        body["stream"] = True
+        return body
+
+    def _parse_stream_chunk(self, data: str) -> ResponseChunk | None:
+        try:
+            raw = json.loads(data)
+        except json.JSONDecodeError:
+            return None
+
+        choices = raw.get("choices")
+        if not choices:
+            return None
+
+        choice = choices[0]
+        delta = choice.get("delta", {})
+        finish_reason = choice.get("finish_reason")
+
+        chunk = ResponseChunk()
+
+        if "content" in delta and delta["content"]:
+            chunk.delta_text = delta["content"]
+
+        if "reasoning" in delta and delta["reasoning"]:
+            chunk.delta_reasoning = delta["reasoning"]
+
+        # Tool call deltas
+        tool_deltas = delta.get("tool_calls")
+        if tool_deltas:
+            td = tool_deltas[0]
+            chunk.tool_call_id = td.get("id")
+            func = td.get("function", {})
+            if func:
+                chunk.tool_call_name = func.get("name")
+                chunk.tool_call_arguments = func.get("arguments")
+
+        if finish_reason:
+            chunk.stop_reason = finish_reason
+
+        return chunk
 
 
 async def main():

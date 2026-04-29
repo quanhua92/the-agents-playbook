@@ -14,6 +14,7 @@ from the_agents_playbook.providers.types import (
     MessageResponse,
     OutputMessage,
     ProviderError,
+    ResponseChunk,
 )
 
 logger = logging.getLogger(__name__)
@@ -122,3 +123,53 @@ class AnthropicProvider(BaseProvider):
             ),
             stop_reason=stop_reason,
         )
+
+    # --- Streaming ---
+
+    def _build_stream_body(self, request: MessageRequest) -> dict[str, Any]:
+        body = self._build_body(request)
+        body["stream"] = True
+        return body
+
+    def _parse_stream_chunk(self, data: str) -> ResponseChunk | None:
+        try:
+            raw = json.loads(data)
+        except json.JSONDecodeError:
+            return None
+
+        event_type = raw.get("type")
+
+        if event_type == "content_block_delta":
+            delta = raw.get("delta", {})
+            chunk = ResponseChunk()
+            if delta.get("type") == "text_delta":
+                chunk.delta_text = delta.get("text")
+            elif delta.get("type") == "input_json_delta":
+                chunk.tool_call_arguments = delta.get("partial_json")
+            return chunk
+
+        if event_type == "message_start":
+            return None  # message metadata — no content yet
+
+        if event_type == "message_delta":
+            stop_reason = raw.get("delta", {}).get("stop_reason")
+            if stop_reason:
+                return ResponseChunk(
+                    stop_reason=_STOP_REASON_MAP.get(stop_reason, "unknown")
+                )
+            return None
+
+        if event_type == "message_stop":
+            return ResponseChunk(finish=True)
+
+        # content_block_start — could capture tool_use id/name
+        if event_type == "content_block_start":
+            block = raw.get("content_block", {})
+            if block.get("type") == "tool_use":
+                return ResponseChunk(
+                    tool_call_id=block.get("id"),
+                    tool_call_name=block.get("name"),
+                )
+            return None
+
+        return None

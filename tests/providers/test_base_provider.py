@@ -18,6 +18,7 @@ from the_agents_playbook.providers.types import (
     ProviderErrorCode,
     ProviderError,
     RequestLog,
+    ResponseChunk,
     RetryConfig,
 )
 
@@ -59,6 +60,25 @@ class StubProvider(BaseProvider):
             ),
             stop_reason=choice.get("finish_reason", "unknown"),
         )
+
+    def _build_stream_body(self, request: MessageRequest) -> dict[str, Any]:
+        body = self._build_body(request)
+        body["stream"] = True
+        return body
+
+    def _parse_stream_chunk(self, data: str) -> ResponseChunk | None:
+        import json as _json
+
+        try:
+            raw = _json.loads(data)
+        except _json.JSONDecodeError:
+            return None
+        choice = raw.get("choices", [{}])[0]
+        delta = choice.get("delta", {})
+        chunk = ResponseChunk()
+        if "content" in delta and delta["content"]:
+            chunk.delta_text = delta["content"]
+        return chunk
 
 
 def make_request(model: str = "test-model", **kwargs) -> MessageRequest:

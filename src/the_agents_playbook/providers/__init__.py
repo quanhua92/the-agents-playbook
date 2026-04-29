@@ -10,8 +10,10 @@ from the_agents_playbook.providers.types import (
     ProviderError,
     ProviderErrorCode,
     RequestLog,
+    ResponseChunk,
     ResponseFormat,
     RetryConfig,
+    StreamUsage,
     ToolChoice,
     ToolSpec,
 )
@@ -28,8 +30,10 @@ __all__ = [
     "ProviderError",
     "ProviderErrorCode",
     "RequestLog",
+    "ResponseChunk",
     "ResponseFormat",
     "RetryConfig",
+    "StreamUsage",
     "ToolChoice",
     "ToolSpec",
 ]

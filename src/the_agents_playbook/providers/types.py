@@ -212,3 +212,27 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     message: OutputMessage
     stop_reason: str
+
+
+# ---------------------------------------------------------------------------
+# Streaming types
+# ---------------------------------------------------------------------------
+
+
+class ResponseChunk(BaseModel):
+    """A single chunk from a streaming response."""
+
+    delta_text: str | None = None
+    delta_reasoning: str | None = None
+    tool_call_id: str | None = None
+    tool_call_name: str | None = None
+    tool_call_arguments: str | None = None
+    stop_reason: str | None = None
+    finish: bool = False
+
+
+class StreamUsage(BaseModel):
+    """Token usage reported at the end of a stream."""
+
+    input_tokens: int = 0
+    output_tokens: int = 0

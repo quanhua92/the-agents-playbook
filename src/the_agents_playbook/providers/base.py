@@ -4,7 +4,7 @@ import logging
 import random
 from abc import ABC, abstractmethod
 from time import monotonic
-from typing import Any, Callable
+from typing import Any, AsyncGenerator, Callable
 
 import httpx
 
@@ -16,7 +16,9 @@ from the_agents_playbook.providers.types import (
     ProviderErrorCode,
     ProviderError,
     RequestLog,
+    ResponseChunk,
     RetryConfig,
+    StreamUsage,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,9 +59,57 @@ class BaseProvider(ABC):
     def _parse_response(self, response: httpx.Response) -> MessageResponse:
         pass
 
+    @abstractmethod
+    def _build_stream_body(self, request: MessageRequest) -> dict[str, Any]:
+        """Return the request body with streaming enabled."""
+        pass
+
+    @abstractmethod
+    def _parse_stream_chunk(self, data: str) -> ResponseChunk | None:
+        """Parse a single SSE data line into a ResponseChunk, or None for no-ops."""
+        pass
+
     # --- Public API ---
     async def send_message(self, request: MessageRequest) -> MessageResponse:
         return await self._with_retry(lambda: self._do_send(request))
+
+    async def stream(
+        self, request: MessageRequest
+    ) -> AsyncGenerator[ResponseChunk, None]:
+        """Stream a response as an async generator of ResponseChunk objects."""
+        client = await self._get_client()
+        body = self._build_stream_body(request)
+
+        logger.info(f"Streaming request to {self._chat_endpoint()}")
+
+        async with client.stream(
+            "POST",
+            self._chat_endpoint(),
+            json=body,
+            timeout=httpx.Timeout(10.0, connect=5.0, read=300.0, write=10.0, pool=10.0),
+        ) as response:
+            self._check_status(response)
+            async for line in response.aiter_lines():
+                chunk = self._parse_sse_line(line)
+                if chunk is not None:
+                    yield chunk
+
+    def _parse_sse_line(self, line: str) -> ResponseChunk | None:
+        """Parse a raw SSE line. Handles data: prefixes and ignores others."""
+        line = line.strip()
+        if not line or line.startswith(":"):
+            return None
+        if line.startswith("data: "):
+            line = line[6:]
+        elif line.startswith("data:"):
+            line = line[5:]
+        else:
+            return None  # event: or other SSE fields — skip
+
+        if line.strip() == "[DONE]":
+            return ResponseChunk(finish=True)
+
+        return self._parse_stream_chunk(line)
 
     # --- Internal send (single attempt, no retry) ---
     async def _do_send(self, request: MessageRequest) -> MessageResponse:
