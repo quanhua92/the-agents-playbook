@@ -21,9 +21,53 @@ class InputMessage(BaseModel):
 
 class OutputMessage(BaseModel):
     role: Literal["assistant"] = "assistant"
-    content: str
+    content: str | None = None
     reasoning: str | None = None
     tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ToolSpec(BaseModel):
+    """A function definition that the LLM can call."""
+
+    name: str
+    description: str
+    parameters: dict[str, Any]  # JSON Schema
+
+    def to_api_dict(self) -> dict[str, Any]:
+        return {
+            "type": "function",
+            "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.parameters,
+            },
+        }
+
+
+class ResponseFormat(BaseModel):
+    """Controls how the LLM formats its response."""
+
+    type: Literal["json_object", "json_schema"] = "json_schema"
+    json_schema_name: str | None = None
+    json_schema: dict[str, Any] | None = None
+    strict: bool = True
+
+
+class ToolChoice(BaseModel):
+    """Controls which tool the LLM must call."""
+
+    type: Literal["auto", "required", "function"] = "auto"
+    function_name: str | None = None
+
+    def to_api_dict(self) -> dict[str, Any] | str:
+        if self.type == "auto":
+            return "auto"
+        if self.type == "required":
+            return "required"
+        return {
+            "type": "function",
+            "function": {"name": self.function_name},
+        }
 
 
 class MessageRequest(BaseModel):
@@ -32,6 +76,10 @@ class MessageRequest(BaseModel):
     temperature: float = 0.7
     max_tokens: int = 4096
     messages: list[InputMessage] = Field(default_factory=list)
+    # Structured output and tool use — all default to empty/None for backward compatibility
+    tools: list[ToolSpec] = Field(default_factory=list)
+    tool_choice: ToolChoice | None = None
+    response_format: ResponseFormat | None = None
 
 
 class MessageResponse(BaseModel):
@@ -116,6 +164,27 @@ class OpenAIProvider(BaseProvider):
                 "include_reasoning": True,
             },
         }
+
+        if request.tools:
+            body["tools"] = [t.to_api_dict() for t in request.tools]
+
+        if request.tool_choice:
+            body["tool_choice"] = request.tool_choice.to_api_dict()
+
+        if request.response_format:
+            rf = request.response_format
+            if rf.type == "json_schema" and rf.json_schema:
+                body["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": rf.json_schema_name,
+                        "strict": rf.strict,
+                        "schema": rf.json_schema,
+                    },
+                }
+            elif rf.type == "json_object":
+                body["response_format"] = {"type": "json_object"}
+
         return body
 
     def _parse_response(self, response: httpx.Response) -> MessageResponse:
@@ -138,18 +207,89 @@ class OpenAIProvider(BaseProvider):
         return output
 
 
-def main():
+async def main():
     p = OpenAIProvider()
-    asyncio.run(
-        p.send_message(
-            MessageRequest(
-                messages=[
-                    InputMessage(role="user", content="What is the capital of Vietnam?")
-                ],
-                model=settings.openai_model,
-            )
+
+    # --- 1. Basic chat (backward compatibility — no new fields) ---
+    print("=== Basic Chat ===")
+    resp = await p.send_message(
+        MessageRequest(
+            messages=[
+                InputMessage(role="user", content="What is the capital of Vietnam?")
+            ],
+            model=settings.openai_model,
         )
     )
+    print(f"Content: {resp.message.content}")
+    print(f"Stop:    {resp.stop_reason}\n")
+
+    # --- 2. Structured output via response_format ---
+    print("=== Structured Output (response_format) ===")
+    resp = await p.send_message(
+        MessageRequest(
+            model=settings.openai_model,
+            system="Extract movie review data from the user's text.",
+            messages=[
+                InputMessage(
+                    role="user",
+                    content="Avatar (2009) by James Cameron. Great visuals. 7.5/10. Sci-fi. Recommended.",
+                )
+            ],
+            response_format=ResponseFormat(
+                json_schema_name="MovieReview",
+                json_schema={
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "year": {"type": "integer"},
+                        "rating": {"type": "number"},
+                        "recommended": {"type": "boolean"},
+                    },
+                    "required": ["title", "year", "rating", "recommended"],
+                    "additionalProperties": False,
+                },
+            ),
+        )
+    )
+    print(f"Content: {resp.message.content}")
+    print(f"Stop:    {resp.stop_reason}\n")
+
+    # --- 3. Tool choice forcing ---
+    print("=== Tool Choice ===")
+    resp = await p.send_message(
+        MessageRequest(
+            model=settings.openai_model,
+            system="Extract movie review data by calling the submit_review tool.",
+            messages=[
+                InputMessage(
+                    role="user",
+                    content="Avatar (2009) by James Cameron. Great visuals. 7.5/10. Sci-fi. Recommended.",
+                )
+            ],
+            tools=[
+                ToolSpec(
+                    name="submit_review",
+                    description="Submit a structured movie review",
+                    parameters={
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "year": {"type": "integer"},
+                            "rating": {"type": "number"},
+                            "recommended": {"type": "boolean"},
+                        },
+                        "required": ["title", "year", "rating", "recommended"],
+                        "additionalProperties": False,
+                    },
+                )
+            ],
+            tool_choice=ToolChoice(type="function", function_name="submit_review"),
+        )
+    )
+    print(f"Tool calls: {json.dumps(resp.message.tool_calls, indent=2)}")
+    print(f"Stop:       {resp.stop_reason}\n")
+
+    await p.close()
 
 
-main()
+asyncio.run(main())
