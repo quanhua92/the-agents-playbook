@@ -1,4 +1,5 @@
 from .settings import Settings, settings, validate_config
+from .agents import AgentDispatcher, AgentRegistry, BaseAgent, WorkerAgent
 from .claw import DegradationManager, RepairLoop, SelfReviewer
 from .context import ContextBuilder, ContextLayer, LayerPriority
 from .guardrails import HookSystem, PermissionMiddleware, RiskLevel
@@ -10,7 +11,10 @@ from .workflows import BaseStep, StepResult, Workflow, WorkflowState
 __all__ = [
     "Agent",
     "AgentConfig",
+    "AgentDispatcher",
     "AgentEvent",
+    "AgentRegistry",
+    "BaseAgent",
     "BaseStep",
     "ContextBuilder",
     "ContextLayer",
@@ -23,11 +27,12 @@ __all__ = [
     "RiskLevel",
     "SelfReviewer",
     "Settings",
-    "validate_config",
     "StepResult",
     "Tool",
     "ToolResult",
     "ToolRegistry",
+    "validate_config",
+    "WorkerAgent",
     "Workflow",
     "WorkflowState",
 ]
