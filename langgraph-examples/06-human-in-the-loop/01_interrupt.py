@@ -1,5 +1,12 @@
 """01_interrupt.py -- interrupt() replaces PermissionMiddleware.
 
+Key points:
+  - Any node can call interrupt(value) to pause graph execution
+  - Caller checks result["__interrupt__"] to see what the graph is waiting for
+  - Caller calls invoke(Command(resume=...)) with the same config to resume
+  - The resume value becomes the return value of interrupt() inside the node
+  - Requires a checkpointer (MemorySaver or SqliteSaver) to persist state
+
 In the root project:
   middleware = PermissionMiddleware()
   middleware.annotate("edit", RiskLevel.WORKSPACE_WRITE)
@@ -15,10 +22,6 @@ In LangGraph:
           return {"messages": [...success...]}
       else:
           return {"messages": [...cancelled...]}
-
-interrupt() natively pauses graph execution, saves state to the
-checkpoint, and resumes when Command(resume=...) is provided.
-Requires a checkpointer (MemorySaver or SqliteSaver).
 """
 
 from typing import Annotated
@@ -74,16 +77,15 @@ def main():
     print("=== Step 1: Invoke (graph interrupts) ===")
     print("Input: request to edit README.md\n")
 
-    # The first invoke will hit the interrupt and raise a GraphInterrupt
-    from langgraph.errors import GraphInterrupt
+    result = app.invoke(
+        {"messages": [HumanMessage(content="Please edit README.md")], "approved": False},
+        config,
+    )
 
-    try:
-        result = app.invoke(
-            {"messages": [HumanMessage(content="Please edit README.md")], "approved": False},
-            config,
-        )
-    except GraphInterrupt:
-        print("Graph interrupted! Waiting for human input...\n")
+    if "__interrupt__" in result:
+        for i in result["__interrupt__"]:
+            print(f"Graph interrupted: {i.value}")
+        print()
 
     # --- Inspect checkpoint state ---
     state = app.get_state(config)
@@ -106,13 +108,14 @@ def main():
     print("\n=== Step 3: Deny (different thread) ===")
     config2 = {"configurable": {"thread_id": "deny-test"}}
 
-    try:
-        app.invoke(
-            {"messages": [HumanMessage(content="Delete old_cache.py")], "approved": False},
-            config2,
-        )
-    except GraphInterrupt:
-        pass
+    partial = app.invoke(
+        {"messages": [HumanMessage(content="Delete old_cache.py")], "approved": False},
+        config2,
+    )
+    if "__interrupt__" in partial:
+        for i in partial["__interrupt__"]:
+            print(f"Graph interrupted: {i.value}")
+        print()
 
     result2 = app.invoke(Command(resume={"approved": False}), config2)
     print(f"Approved: {result2['approved']}")
