@@ -1,5 +1,12 @@
 """02_command_resuming.py -- Command-based resumption after interrupt.
 
+Key points:
+  - Any node can call interrupt(value) to pause graph execution
+  - Caller checks result["__interrupt__"] to see what the graph is waiting for
+  - Caller calls invoke(Command(resume=...)) with the same config to resume
+  - The resume value becomes the return value of interrupt() inside the node
+  - The resume value can influence routing via conditional edges
+
 In the root project, human-in-the-loop happens BEFORE execution:
   if middleware.should_prompt("edit"):
       response = prompter.ask("Approve?")
@@ -8,9 +15,6 @@ In the root project, human-in-the-loop happens BEFORE execution:
 In LangGraph, human-in-the-loop happens MID-EXECUTION:
   graph runs -> hits interrupt() -> PAUSES -> human responds -> RESUMES
   The human's response can influence subsequent routing via conditional edges.
-
-This example shows a gate node that asks the user which approach to take,
-then routes to different paths based on their response.
 """
 
 from typing import Annotated, Literal
@@ -66,19 +70,18 @@ def main():
     checkpointer = MemorySaver()
     app = graph.compile(checkpointer=checkpointer)
 
-    from langgraph.errors import GraphInterrupt
-
     # --- Scenario 1: Choose conservative ---
     print("=== Scenario 1: Choose Conservative ===\n")
     config1 = {"configurable": {"thread_id": "conservative-path"}}
 
-    try:
-        app.invoke(
-            {"messages": [HumanMessage(content="Fix the bug in auth.py")], "decision": ""},
-            config1,
-        )
-    except GraphInterrupt:
-        pass
+    result = app.invoke(
+        {"messages": [HumanMessage(content="Fix the bug in auth.py")], "decision": ""},
+        config1,
+    )
+    if "__interrupt__" in result:
+        for i in result["__interrupt__"]:
+            print(f"Graph interrupted: {i.value}")
+        print()
 
     result1 = app.invoke(Command(resume={"choice": "b"}), config1)
     print(f"Decision: {result1['decision']}")
@@ -88,13 +91,14 @@ def main():
     print("\n=== Scenario 2: Choose Aggressive ===\n")
     config2 = {"configurable": {"thread_id": "aggressive-path"}}
 
-    try:
-        app.invoke(
-            {"messages": [HumanMessage(content="Fix the bug in auth.py")], "decision": ""},
-            config2,
-        )
-    except GraphInterrupt:
-        pass
+    result = app.invoke(
+        {"messages": [HumanMessage(content="Fix the bug in auth.py")], "decision": ""},
+        config2,
+    )
+    if "__interrupt__" in result:
+        for i in result["__interrupt__"]:
+            print(f"Graph interrupted: {i.value}")
+        print()
 
     result2 = app.invoke(Command(resume={"choice": "a"}), config2)
     print(f"Decision: {result2['decision']}")
