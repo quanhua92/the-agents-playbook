@@ -73,7 +73,14 @@ class SessionCompactor:
         return [summary_msg] + recent
 
     def _build_summary(self, messages: list[dict[str, Any]]) -> str:
-        """Build a summary from old messages."""
+        """Build a summary from old messages.
+
+        If a summarize_fn was provided, it is called to produce an LLM-based
+        summary. Otherwise falls back to simple concatenation.
+        """
+        if self._summarize_fn is not None:
+            return self._summarize_fn(messages)
+
         parts: list[str] = []
         for msg in messages:
             role = msg.get("role", "unknown")
