@@ -17,6 +17,7 @@ from the_agents_playbook.providers.types import (
     ToolChoice,
     ToolSpec,
 )
+from the_agents_playbook.providers.usage import UsageRecord, UsageTracker
 
 __all__ = [
     "AnthropicProvider",
@@ -36,4 +37,6 @@ __all__ = [
     "StreamUsage",
     "ToolChoice",
     "ToolSpec",
+    "UsageRecord",
+    "UsageTracker",
 ]
