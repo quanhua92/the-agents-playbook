@@ -12,11 +12,13 @@ class AgentEvent:
     callers to stream progress, tool calls, and results in real time.
     """
 
-    type: Literal["text", "tool_call", "tool_result", "status", "error"]
+    type: Literal["text", "text_delta", "tool_call", "tool_result", "status", "error"]
     data: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.type == "text":
+            self.data.setdefault("text", "")
+        elif self.type == "text_delta":
             self.data.setdefault("text", "")
         elif self.type == "tool_call":
             self.data.setdefault("tool_name", "")

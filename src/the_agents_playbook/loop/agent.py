@@ -210,6 +210,170 @@ class Agent:
             "message": f"Reached max tool iterations ({self._config.max_tool_iterations})",
         })
 
+    async def run_streaming(self, prompt: str) -> AsyncGenerator[AgentEvent, None]:
+        """Execute the agent loop with real-time streaming output.
+
+        Like run(), but uses provider.stream() instead of send_message().
+        Yields text deltas in real-time, buffers tool call chunks until
+        complete, then yields tool events.
+
+        Streaming makes agents feel responsive — the user sees output
+        token-by-token instead of waiting 10+ seconds of silence.
+
+        Args:
+            prompt: The user's message or task description.
+
+        Yields:
+            AgentEvent objects. Text events yield individual deltas with
+            type="text_delta". Tool calls are buffered and yielded as
+            complete "tool_call" events once all chunks arrive.
+        """
+        # 1. Store user message in memory
+        if self._memory:
+            await self._memory.store(Fact(
+                content=prompt,
+                source="user",
+            ))
+
+        # 2. Recall relevant memories
+        memory_context = ""
+        if self._memory:
+            facts = await self._memory.recall(prompt, top_k=5)
+            if facts:
+                memory_context = "\n".join(f"- {f.content}" for f in facts)
+
+        # 3. Build context
+        system_prompt = ""
+        if self._context_builder:
+            if memory_context:
+                from ..context.layers import ContextLayer, LayerPriority
+                self._context_builder.add_dynamic(
+                    ContextLayer(
+                        name="memory",
+                        content=f"Relevant memories:\n{memory_context}",
+                        priority=LayerPriority.SEMI_STABLE,
+                    )
+                )
+            system_prompt = self._context_builder.build()
+
+        # 4. Start the streaming ReAct loop
+        messages: list[InputMessage] = [InputMessage(role="user", content=prompt)]
+        tool_specs = self._registry.get_specs()
+
+        for iteration in range(self._config.max_tool_iterations):
+            yield AgentEvent(type="status", data={
+                "message": f"Thinking (iteration {iteration + 1})...",
+            })
+
+            request = MessageRequest(
+                model=app_settings.openai_model,
+                system=system_prompt or "You are a helpful assistant with access to tools.",
+                messages=messages,
+                tools=tool_specs if tool_specs else [],
+                tool_choice=ToolChoice(type="auto"),
+            )
+
+            # 5. Stream from provider
+            try:
+                full_text = ""
+                # Buffer for tool calls being assembled from chunks
+                tool_call_buffers: dict[str, dict[str, str]] = {}
+
+                async for chunk in self._provider.stream(request):
+                    if chunk.finish:
+                        break
+
+                    # Text delta
+                    if chunk.delta_text:
+                        yield AgentEvent(type="text_delta", data={
+                            "text": chunk.delta_text,
+                        })
+                        full_text += chunk.delta_text
+
+                    # Tool call chunk — buffer until complete
+                    if chunk.tool_call_id:
+                        tc_id = chunk.tool_call_id
+                        if tc_id not in tool_call_buffers:
+                            tool_call_buffers[tc_id] = {
+                                "name": "",
+                                "arguments": "",
+                            }
+                        if chunk.tool_call_name:
+                            tool_call_buffers[tc_id]["name"] = chunk.tool_call_name
+                        if chunk.tool_call_arguments:
+                            tool_call_buffers[tc_id]["arguments"] += chunk.tool_call_arguments
+
+                # After stream ends, check for buffered tool calls
+                if tool_call_buffers:
+                    # Add assistant message
+                    messages.append(InputMessage(
+                        role="assistant",
+                        content=full_text,
+                    ))
+
+                    # Process each complete tool call
+                    for tc_id, tc_data in tool_call_buffers.items():
+                        tool_name = tc_data["name"]
+                        try:
+                            arguments = json.loads(tc_data["arguments"] or "{}")
+                        except json.JSONDecodeError:
+                            arguments = {}
+
+                        yield AgentEvent(type="tool_call", data={
+                            "tool_name": tool_name,
+                            "arguments": arguments,
+                        })
+
+                        try:
+                            result = await self._registry.dispatch(tool_name, arguments)
+                        except Exception as exc:
+                            result_str = f"Error: {exc}"
+                            yield AgentEvent(type="tool_result", data={
+                                "output": result_str,
+                                "error": True,
+                            })
+                            messages.append(InputMessage(
+                                role="user",
+                                content=f"Tool {tool_name} failed: {result_str}",
+                            ))
+                            continue
+
+                        yield AgentEvent(type="tool_result", data={
+                            "output": result.output,
+                            "error": result.error,
+                        })
+
+                        messages.append(InputMessage(
+                            role="user",
+                            content=result.output,
+                        ))
+
+                    # Continue the loop for next iteration
+                    continue
+
+                # No tool calls — this is the final text response
+                if full_text:
+                    yield AgentEvent(type="text", data={"text": full_text})
+                    if self._memory:
+                        await self._memory.store(Fact(
+                            content=full_text,
+                            source="assistant",
+                        ))
+                return
+
+            except Exception as exc:
+                error_msg = str(exc)
+                logger.error("Provider streaming error: %s", error_msg)
+                if self._config.on_error == "raise":
+                    raise
+                yield AgentEvent(type="error", data={"message": error_msg})
+                return
+
+        # Hit max iterations
+        yield AgentEvent(type="status", data={
+            "message": f"Reached max tool iterations ({self._config.max_tool_iterations})",
+        })
+
     async def run_turn(self, prompt: str) -> TurnResult:
         """Run the agent loop and collect all events into a TurnResult.
 
