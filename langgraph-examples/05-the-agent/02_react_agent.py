@@ -44,14 +44,21 @@ def main():
     checkpointer = MemorySaver()
 
     # This single call replaces the entire Agent class
-    agent = create_react_agent(llm, [add_numbers, multiply_numbers], checkpointer=checkpointer)
+    agent = create_react_agent(
+        llm,
+        [add_numbers, multiply_numbers],
+        checkpointer=checkpointer,
+        prompt="You have tools for addition and multiplication. Always use them for any calculation -- never compute numbers in your head.",
+    )
 
     config = {"configurable": {"thread_id": "math-session"}}
 
-    # Task requiring multi-step tool use: (3 + 5) * 4
-    print("=== Task: What is (3 + 5) * 4? ===\n")
+    # Task requiring multi-step tool use: large numbers that LLMs can't
+    # compute reliably without tools.
+    # (3847291034 + 9283746501) * 7
+    print("=== Task: What is (3847291034 + 9283746501) * 7? ===\n")
     result = agent.invoke(
-        {"messages": [("user", "What is (3 + 5) * 4?")]},
+        {"messages": [("user", "What is (3847291034 + 9283746501) * 7?")]},
         config,
     )
 
