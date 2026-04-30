@@ -45,3 +45,38 @@ class BaseMemoryProvider(ABC):
     async def consolidate(self) -> None:
         """Consolidate raw history into structured, indexed facts."""
         ...
+
+    # --- Segmented memory extensions ---
+
+    async def store_record(self, record: Any) -> None:
+        """Store a MemoryRecord with segment/tier metadata.
+
+        Default implementation falls back to store() with a plain Fact.
+        Subclasses should override to use the full record metadata.
+        """
+        fact = Fact(
+            content=record.content,
+            source=record.source,
+            timestamp=record.timestamp,
+            embedding=record.embedding,
+            tags=record.tags,
+        )
+        await self.store(fact)
+
+    async def recall_by_segment(
+        self, segment: Any, top_k: int = 5
+    ) -> list[Any]:
+        """Recall memories filtered by segment.
+
+        Default implementation returns an empty list.
+        Subclasses should override to filter records by segment.
+        """
+        return []
+
+    async def archive(self, memory_id: str) -> None:
+        """Archive a memory record by ID, freezing it from decay.
+
+        Default implementation is a no-op.
+        Subclasses should override to update the record's lifecycle.
+        """
+        pass
