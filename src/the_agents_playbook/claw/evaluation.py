@@ -3,6 +3,10 @@
 The EvaluationHarness runs single tasks or benchmark suites, tracking
 success, tool calls, tokens, and latency. Results can be compared
 over time to measure improvement.
+
+When an Agent instance is provided, it actually runs the agent on the
+task and scores the result. Without an agent, it falls back to
+pre-computed scores.
 """
 
 import logging
@@ -79,13 +83,25 @@ class EvaluationHarness:
     """Run and track agent evaluations.
 
     Usage:
+        # With a real agent
+        harness = EvaluationHarness(agent=my_agent)
+        result = await harness.evaluate(
+            "What is 2+2?",
+            expected="4",
+        )
+
+        # Without agent (pre-computed scores)
         harness = EvaluationHarness()
-        result = await harness.evaluate("Read auth.py and find bugs", expected="bug on line 42")
+        result = await harness.evaluate("task", score=0.8)
+
+        # Run a suite
         suite = await harness.run_suite([task1, task2, task3])
     """
 
-    def __init__(self) -> None:
+    def __init__(self, agent: Any = None) -> None:
         self._results: list[BenchmarkResult] = []
+        self._agent = agent
+        self._evaluator: AgentEvaluator | None = None
 
     @property
     def results(self) -> list[BenchmarkResult]:
@@ -96,31 +112,48 @@ class EvaluationHarness:
         task: str,
         expected: str | None = None,
         score: float | None = None,
+        criteria: dict[str, str] | None = None,
+        mode: str = "deterministic",
     ) -> BenchmarkResult:
         """Evaluate a single task.
 
-        In a real implementation, this runs the agent on the task and
-        compares the output against expected. Here it returns a
-        placeholder result.
+        If an agent was provided at construction, the agent is run on the
+        task and the result is scored. Otherwise, returns a result with
+        the pre-computed score.
 
         Args:
             task: The task description.
-            expected: Optional expected output for scoring.
-            score: Optional pre-computed score.
+            expected: For deterministic mode, substring that must appear.
+            score: Pre-computed score (used when no agent is configured).
+            criteria: For llm_judge mode, evaluation rubric.
+            mode: "deterministic" or "llm_judge".
 
         Returns:
             BenchmarkResult for this task.
         """
         start = time.monotonic()
-        # Placeholder — real implementation would run the agent
-        result = BenchmarkResult(
-            task=task,
-            success=True,
-            score=score if score is not None else 1.0,
-            tool_calls=0,
-            tokens_used=0,
-            latency_seconds=time.monotonic() - start,
-        )
+
+        # If we have an agent and either expected or criteria, run it
+        if self._agent and (expected or criteria or mode == "llm_judge"):
+            if self._evaluator is None:
+                from .agent_evaluator import AgentEvaluator, EvalConfig
+                self._evaluator = AgentEvaluator(self._agent)
+
+            config = EvalConfig(
+                mode=mode,
+                expected_substring=expected,
+                judge_criteria=criteria or {},
+            )
+            result = await self._evaluator.evaluate(task, config)
+        else:
+            # Fallback: pre-computed score
+            result = BenchmarkResult(
+                task=task,
+                success=True,
+                score=score if score is not None else 1.0,
+                latency_seconds=time.monotonic() - start,
+            )
+
         self._results.append(result)
         logger.info("Evaluated task: %s (score=%.2f)", task[:50], result.score)
         return result
@@ -129,29 +162,23 @@ class EvaluationHarness:
         """Run a suite of evaluation tasks.
 
         Args:
-            tasks: List of dicts with keys "task", "expected" (optional), "score" (optional).
+            tasks: List of dicts with keys "task", "expected" (optional),
+                "score" (optional), "criteria" (optional), "mode" (optional).
 
         Returns:
             SuiteResult with aggregated metrics.
         """
-        suite = SuiteResult(total_tasks=len(tasks))
+        results: list[BenchmarkResult] = []
 
         for task_def in tasks:
             task_text = task_def.get("task", "")
-            expected = task_def.get("expected")
-            score = task_def.get("score")
+            result = await self.evaluate(
+                task_text,
+                expected=task_def.get("expected"),
+                score=task_def.get("score"),
+                criteria=task_def.get("criteria"),
+                mode=task_def.get("mode", "deterministic"),
+            )
+            results.append(result)
 
-            result = await self.evaluate(task_text, expected=expected, score=score)
-            suite.results.append(result)
-            suite.total_latency += result.latency_seconds
-
-            if result.success:
-                suite.passed += 1
-            else:
-                suite.failed += 1
-
-        logger.info(
-            "Suite complete: %d/%d passed (avg score=%.2f)",
-            suite.passed, suite.total_tasks, suite.avg_score,
-        )
-        return suite
+        return SuiteResult(results=results)
