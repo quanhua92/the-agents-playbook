@@ -33,7 +33,7 @@ def calculate(expression: str) -> str:
 
 @tool
 def lookup_fact(topic: str) -> str:
-    """Look up a fact about a topic."""
+    """Look up a fact about a science or math topic (e.g., pi, speed of light, earth circumference)."""
     facts = {
         "pi": "3.14159...",
         "speed of light": "299,792,458 m/s",
