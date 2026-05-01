@@ -25,8 +25,9 @@ def recall_memory(query: str, segment: str = "all", top_k: int = 3) -> str:
 
     Args:
         query: The search query.
-        segment: Memory segment to filter (identity, preference,
-            project, knowledge, context, correction, relationship, or all).
+        segment: Memory segment to filter (identity, expertise,
+            preference, relationship, goal, feedback, project,
+            knowledge, context, or all).
         top_k: Maximum number of results.
     """
     from the_agents_playbook.memory import (
@@ -39,8 +40,16 @@ def recall_memory(query: str, segment: str = "all", top_k: int = 3) -> str:
     memories = [
         MemoryRecord(content="User's name is Alice", source="user",
                      segment=MemorySegment.IDENTITY),
+        MemoryRecord(content="Alice is proficient in Rust and Go", source="user",
+                     segment=MemorySegment.EXPERTISE),
         MemoryRecord(content="Alice prefers dark mode", source="user",
                      segment=MemorySegment.PREFERENCE),
+        MemoryRecord(content="Alice is a senior engineer at Acme Corp",
+                     source="user", segment=MemorySegment.RELATIONSHIP),
+        MemoryRecord(content="Alice wants to transition to staff engineer",
+                     source="user", segment=MemorySegment.GOAL),
+        MemoryRecord(content="User said responses were too verbose",
+                     source="user", segment=MemorySegment.FEEDBACK),
         MemoryRecord(content="Working on OAuth migration", source="user",
                      segment=MemorySegment.PROJECT),
         MemoryRecord(content="Auth service uses JWT with 15min expiry",
@@ -94,7 +103,9 @@ def main():
                     "description": (
                         "Recall stored memories about the user. "
                         "Filter by segment to get specific categories: "
-                        "identity (name, email), preference (likes/dislikes), "
+                        "identity (name, email), expertise (skills), "
+                        "preference (likes/dislikes), relationship (org, team), "
+                        "goal (intentions), feedback (agent perf signals), "
                         "project (work details), knowledge (facts from tools), "
                         "context (temporary situation), or 'all'."
                     ),
@@ -109,9 +120,10 @@ def main():
                                 "type": "string",
                                 "description": "Memory segment filter",
                                 "enum": [
-                                    "identity", "preference", "project",
-                                    "knowledge", "context", "correction",
-                                    "relationship", "all",
+                                    "identity", "expertise", "preference",
+                                    "relationship", "goal", "feedback",
+                                    "project", "knowledge", "context",
+                                    "all",
                                 ],
                                 "default": "all",
                             },
@@ -160,8 +172,12 @@ def main():
     # Use the same records from recall_memory for demonstration
     segments = [
         ("Identity (permanent)", MemorySegment.IDENTITY),
+        ("Expertise (long-term)", MemorySegment.EXPERTISE),
         ("Preference (long-term)", MemorySegment.PREFERENCE),
+        ("Goal (long-term)", MemorySegment.GOAL),
+        ("Feedback (medium-term)", MemorySegment.FEEDBACK),
         ("Project (medium-term)", MemorySegment.PROJECT),
+        ("Knowledge (medium-term)", MemorySegment.KNOWLEDGE),
         ("Context (short-term)", MemorySegment.CONTEXT),
     ]
 

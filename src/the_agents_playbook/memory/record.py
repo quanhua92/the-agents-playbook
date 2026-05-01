@@ -43,7 +43,7 @@ class MemoryRecord:
         importance: Base importance 0.0-1.0 (inherited from segment if not set).
         decay_rate: Lambda for exponential decay (inherited from segment if not set).
         lifecycle: Current lifecycle state.
-        supersedes: ID of another record this one replaces (for corrections).
+
         access_count: Number of times this record has been recalled.
         last_accessed_at: Timestamp of last recall.
         metadata: Arbitrary additional data.
@@ -54,12 +54,12 @@ class MemoryRecord:
     timestamp: float = field(default_factory=monotonic)
     embedding: np.ndarray | None = None
     tags: list[str] = field(default_factory=list)
-    segment: MemorySegment = MemorySegment.KNOWLEDGE
+    segment: MemorySegment = MemorySegment.CONTEXT
     tier: MemoryTier | None = None
     importance: float | None = None
     decay_rate: float | None = None
     lifecycle: MemoryLifecycle = MemoryLifecycle.ACTIVE
-    supersedes: str | None = None
+
     access_count: int = 0
     last_accessed_at: float | None = None
     metadata: dict[str, Any] = field(default_factory=dict)

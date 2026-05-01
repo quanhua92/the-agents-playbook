@@ -38,12 +38,17 @@ def main():
             source="user",
             segment=MemorySegment.IDENTITY,
         ),
-        # Permanent — corrections supersede old facts
+        # Permanent — identity never decays
         MemoryRecord(
-            content="User prefers they/them pronouns (corrected from she/her)",
+            content="User prefers they/them pronouns",
             source="user",
-            segment=MemorySegment.CORRECTION,
-            supersedes="pronouns-001",
+            segment=MemorySegment.IDENTITY,
+        ),
+        # Long-term — expertise
+        MemoryRecord(
+            content="User is proficient in Rust, Go, and Python",
+            source="user",
+            segment=MemorySegment.EXPERTISE,
         ),
         # Long-term — preferences decay very slowly
         MemoryRecord(
@@ -57,17 +62,32 @@ def main():
             source="user",
             segment=MemorySegment.RELATIONSHIP,
         ),
+        # Long-term — goals outlive projects
+        MemoryRecord(
+            content="User wants to transition to a staff engineering role",
+            source="user",
+            segment=MemorySegment.GOAL,
+        ),
+        # Medium-term — feedback on agent performance
+        MemoryRecord(
+            content="User said responses were too verbose last week",
+            source="user",
+            segment=MemorySegment.FEEDBACK,
+            tags=["verbosity"],
+        ),
         # Medium-term — project details
         MemoryRecord(
             content="Working on migrating auth service to OAuth 2.0",
             source="assistant",
             segment=MemorySegment.PROJECT,
+            tags=["auth-migration"],
         ),
         # Medium-term — knowledge from tool results
         MemoryRecord(
             content="The auth service uses JWT tokens with 15min expiry",
             source="tool:read_file",
             segment=MemorySegment.KNOWLEDGE,
+            tags=["auth-migration"],
         ),
         # Short-term — temporary context, decays fast
         MemoryRecord(
@@ -108,7 +128,7 @@ def main():
     print("\n\n=== Access Boost Effect ===")
     print("The knowledge fact was recalled 10 times.\n")
 
-    knowledge_record = records[5]  # "The auth service uses JWT tokens..."
+    knowledge_record = records[8]  # "The auth service uses JWT tokens..."
     for i in range(10):
         knowledge_record.record_access()
 
@@ -122,8 +142,8 @@ def main():
     # Manually backdate the context records to simulate old age
     import time
     now = time.monotonic()
-    records[6].timestamp = now - 365 * 86400   # 1 year old
-    records[7].timestamp = now - 365 * 86400   # 1 year old
+    records[9].timestamp = now - 365 * 86400   # 1 year old
+    records[10].timestamp = now - 365 * 86400   # 1 year old
 
     pruned = decay.prune(records)
 
@@ -139,11 +159,12 @@ def main():
         if record.lifecycle == MemoryLifecycle.ACTIVE:
             print(f"  [{record.segment.value}] {record.content[:50]}")
 
-    # --- Show correction superseding ---
-    print("\n\n=== Correction Superseding ===\n")
-    print("When a user corrects a fact, the old fact is superseded:")
-    print(f"  New fact: {records[1].content}")
-    print(f"  Supersedes: {records[1].supersedes}")
+    # --- Show tag-based scoping ---
+    print("\n\n=== Tag-Based Scoping ===\n")
+    print("Tags let you group records within a segment for scope clearing:")
+    tagged = [r for r in records if "auth-migration" in r.tags]
+    for r in tagged:
+        print(f"  [{r.segment.value}] {r.content}  tags={r.tags}")
 
     # --- Lifecycle summary ---
     print("\n\n=== Full Lifecycle Summary ===\n")

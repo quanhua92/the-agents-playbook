@@ -80,3 +80,29 @@ class BaseMemoryProvider(ABC):
         Subclasses should override to update the record's lifecycle.
         """
         pass
+
+    # --- Tag-aware methods ---
+
+    async def recall_by_tag(
+        self, segment: Any, tag: str, top_k: int = 5
+    ) -> list[Any]:
+        """Recall memories filtered by segment and tag.
+
+        Tags provide freeform scoping within a segment (e.g. a PROJECT
+        segment tagged "auth-migration", or a FEEDBACK segment tagged
+        "verbosity").
+
+        Default implementation returns an empty list.
+        Subclasses should override to filter records by segment and tag.
+        """
+        return []
+
+    async def archive_by_scope(self, segment: Any, tag: str) -> list[Any]:
+        """Archive all memories matching a segment + tag scope.
+
+        Useful for clearing out an entire project or topic when it's done.
+
+        Default implementation returns an empty list.
+        Subclasses should override to archive matching records.
+        """
+        return []

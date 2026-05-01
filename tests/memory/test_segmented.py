@@ -44,15 +44,41 @@ class TestSegmentDefaults:
         with pytest.raises(AttributeError):
             cfg.decay_rate = 999
 
+    def test_all_nine_segments_exist(self):
+        expected = {
+            MemorySegment.IDENTITY, MemorySegment.EXPERTISE,
+            MemorySegment.PREFERENCE, MemorySegment.RELATIONSHIP,
+            MemorySegment.GOAL, MemorySegment.FEEDBACK,
+            MemorySegment.PROJECT, MemorySegment.KNOWLEDGE,
+            MemorySegment.CONTEXT,
+        }
+        assert set(MemorySegment) == expected
+
+    def test_expertise_is_long_term(self):
+        cfg = SEGMENT_DEFAULTS[MemorySegment.EXPERTISE]
+        assert cfg.tier == MemoryTier.LONG_TERM
+        assert cfg.importance == 0.85
+        assert cfg.decay_rate > 0
+
+    def test_goal_is_long_term(self):
+        cfg = SEGMENT_DEFAULTS[MemorySegment.GOAL]
+        assert cfg.tier == MemoryTier.LONG_TERM
+        assert cfg.importance == 0.75
+
+    def test_feedback_is_medium_term(self):
+        cfg = SEGMENT_DEFAULTS[MemorySegment.FEEDBACK]
+        assert cfg.tier == MemoryTier.MEDIUM_TERM
+        assert cfg.importance == 0.6
+
 
 # ---------------------------------------------------------------------------
 # MemoryRecord
 # ---------------------------------------------------------------------------
 
 class TestMemoryRecord:
-    def test_default_segment_is_knowledge(self):
+    def test_default_segment_is_context(self):
         record = MemoryRecord(content="test", source="user")
-        assert record.segment == MemorySegment.KNOWLEDGE
+        assert record.segment == MemorySegment.CONTEXT
 
     def test_inherits_defaults_from_segment(self):
         record = MemoryRecord(
@@ -96,13 +122,6 @@ class TestMemoryRecord:
         record = MemoryRecord(content="test", source="user")
         assert record.lifecycle == MemoryLifecycle.ACTIVE
 
-    def test_supersedes_field(self):
-        record = MemoryRecord(
-            content="corrected", source="user",
-            segment=MemorySegment.CORRECTION,
-            supersedes="old-fact-id",
-        )
-        assert record.supersedes == "old-fact-id"
 
 
 # ---------------------------------------------------------------------------
@@ -303,3 +322,39 @@ class TestBaseMemoryProviderExtensions:
         memory = FakeMemory()
         # Should not raise
         asyncio.run(memory.archive("some-id"))
+
+    def test_recall_by_tag_default_empty(self):
+        from the_agents_playbook.memory.protocol import BaseMemoryProvider, Fact
+
+        class FakeMemory(BaseMemoryProvider):
+            async def store(self, fact: Fact) -> None:
+                pass
+            async def recall(self, query: str, top_k: int = 5) -> list[Fact]:
+                return []
+            async def consolidate(self) -> None:
+                pass
+
+        import asyncio
+        memory = FakeMemory()
+        results = asyncio.run(
+            memory.recall_by_tag(MemorySegment.PROJECT, "auth-migration")
+        )
+        assert results == []
+
+    def test_archive_by_scope_default_empty(self):
+        from the_agents_playbook.memory.protocol import BaseMemoryProvider, Fact
+
+        class FakeMemory(BaseMemoryProvider):
+            async def store(self, fact: Fact) -> None:
+                pass
+            async def recall(self, query: str, top_k: int = 5) -> list[Fact]:
+                return []
+            async def consolidate(self) -> None:
+                pass
+
+        import asyncio
+        memory = FakeMemory()
+        results = asyncio.run(
+            memory.archive_by_scope(MemorySegment.PROJECT, "auth-migration")
+        )
+        assert results == []

@@ -10,23 +10,26 @@ Three new classes introduce segment classification, tiered decay, and lifecycle 
 
 | Class | File | Role |
 |---|---|---|
-| `MemorySegment` | `memory/segments.py` | Enum of 7 categories |
+| `MemorySegment` | `memory/segments.py` | Enum of 9 categories |
 | `MemoryRecord` | `memory/record.py` | Extended `Fact` with segment, tier, importance, lifecycle |
 | `MemoryDecay` | `memory/decay.py` | Scoring formula + prune/archive logic |
 
 ### Segments
 
-Each memory is classified into one of seven segments, each with different retention behavior:
+Each memory is classified into one of nine segments, each with different retention behavior:
 
 ```
-IDENTITY     → permanent, importance=1.0, decay=0     (name, email, phone)
-PREFERENCE   → long-term,  importance=0.8, decay=0.001 (likes, format prefs)
-CORRECTION   → permanent, importance=0.9, decay=0     (user corrections)
-RELATIONSHIP → long-term,  importance=0.7, decay=0.002 (work role, family)
-PROJECT      → medium,     importance=0.6, decay=0.01  (active project info)
-KNOWLEDGE    → medium,     importance=0.5, decay=0.008 (facts from tool results)
-CONTEXT      → short-term, importance=0.3, decay=0.05  (temporary situation)
+IDENTITY     → permanent, importance=1.0,  decay=0     (name, email, pronouns)
+EXPERTISE    → long-term, importance=0.85, decay=0.001 (skills, proficiency)
+PREFERENCE   → long-term, importance=0.8,  decay=0.002 (style, format)
+RELATIONSHIP → long-term, importance=0.7,  decay=0.002 (org, team, family)
+GOAL         → long-term, importance=0.75, decay=0.003 (intentions, plans)
+FEEDBACK     → medium,    importance=0.6,  decay=0.005 (agent perf signals)
+PROJECT      → medium,    importance=0.6,  decay=0.01  (active deliverables)
+KNOWLEDGE    → medium,    importance=0.5,  decay=0.008 (tool/system facts)
+CONTEXT      → short-term,importance=0.3,  decay=0.05  (temporary situation)
 ```
+
 
 ### The Scoring Formula
 
@@ -52,19 +55,25 @@ ACTIVE → ARCHIVED → PRUNED
 - **ARCHIVED** — manually frozen or auto-archived when score drops below 0.05. No longer decays but still exists.
 - **PRUNED** — score dropped below 0.01. Ready for deletion from storage.
 
-Permanent memories (IDENTITY, CORRECTION) never transition — they're excluded from both archiving and pruning.
+Permanent memories (IDENTITY) never transition — they're excluded from both archiving and pruning.
 
 ### How it integrates
 
-`BaseMemoryProvider` in `memory/protocol.py` gains three new methods:
+`BaseMemoryProvider` in `memory/protocol.py` gains five methods:
 
 ```python
 async def store_record(self, record: MemoryRecord) -> None
 async def recall_by_segment(self, segment: MemorySegment, top_k: int) -> list[MemoryRecord]
 async def archive(self, memory_id: str) -> None
+async def recall_by_tag(self, segment: MemorySegment, tag: str, top_k: int) -> list[MemoryRecord]
+async def archive_by_scope(self, segment: MemorySegment, tag: str) -> list[MemoryRecord]
 ```
 
-All three have default implementations so existing memory providers (file, vector, etc.) continue working without changes. Subclasses override to use the full record metadata.
+All five have default implementations so existing memory providers (file, vector, etc.) continue working without changes. Subclasses override to use the full record metadata.
+
+### Freeform tags for scope clearing
+
+Records carry a `tags: list[str]` field inherited from `Fact`. Tags provide lightweight scoping within a segment — for example, all records related to a project might share the tag `"auth-migration"`. The `archive_by_scope()` method clears an entire scope at once when the project wraps up.
 
 ### Creating a record
 
@@ -101,10 +110,10 @@ archived, pruned = decay.decay_and_archive(records)
 
 ## Code Reference
 
-- `src/the_agents_playbook/memory/segments.py` — `MemorySegment` enum, `MemoryTier` enum, `SegmentConfig`, `SEGMENT_DEFAULTS`
+- `src/the_agents_playbook/memory/segments.py` — `MemorySegment` (9 values), `MemoryTier`, `SegmentConfig`, `SEGMENT_DEFAULTS`
 - `src/the_agents_playbook/memory/record.py` — `MemoryRecord` extending `Fact` with segment, tier, importance, lifecycle
 - `src/the_agents_playbook/memory/decay.py` — `MemoryDecay` with `score()`, `prune()`, `decay_and_archive()`
-- `src/the_agents_playbook/memory/protocol.py` — `BaseMemoryProvider` extended with `store_record()`, `recall_by_segment()`, `archive()`
+- `src/the_agents_playbook/memory/protocol.py` — `BaseMemoryProvider` with `store_record()`, `recall_by_segment()`, `archive()`, `recall_by_tag()`, `archive_by_scope()`
 
 ## Playground Example
 

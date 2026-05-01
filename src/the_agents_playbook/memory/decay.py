@@ -10,7 +10,7 @@ given time:
 - days: time since creation
 - access_count: frequently recalled memories get a small boost
 
-Permanent memories (identity, corrections) have lambda=0, so they
+Permanent memories (identity) have lambda=0, so they
 never decay regardless of time passed.
 """
 
