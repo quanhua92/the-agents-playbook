@@ -1,25 +1,30 @@
-"""03_bound_tools.py -- .bind_tools() attaches tools to the model.
+"""03_bound_tools.py -- tool_choice controls when and which tools the LLM must use.
 
 In the root project:
   request = MessageRequest(
       model=settings.openai_model,
       messages=messages,
       tools=registry.get_specs(),
-      tool_choice=ToolChoice(type="auto"),
+      tool_choice=ToolChoice(type="auto"),      # model decides
+      tool_choice=ToolChoice(type="required"),    # must call a tool
+      tool_choice=ToolChoice(type="none"),        # must not call any tool
   )
-  response = await provider.send_message(request)
 
-In LangChain:
-  llm_with_tools = llm.bind_tools([calculate, lookup_fact])
-  response = llm_with_tools.invoke(messages)
-
-The model decides whether to use tools based on the query content.
+In LangChain (via bind_tools or bind):
+  llm.bind_tools(tools, tool_choice="auto")       # default — model decides
+  llm.bind_tools(tools, tool_choice="required")   # must call at least one tool
+  llm.bind_tools(tools, tool_choice="none")       # must not call any tool
+  llm.bind_tools(tools, tool_choice="any")        # must call a tool, picks which
+  llm.bind_tools(tools, tool_choice="calculate")  # must call this specific tool
 """
 
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
 
-from shared import get_openai_llm
+from shared import settings
+
+MODEL = settings.openai_model
 
 
 @tool
@@ -42,35 +47,61 @@ def lookup_fact(topic: str) -> str:
     return facts.get(topic.lower(), f"No fact found for '{topic}'")
 
 
+def show(choice: str, query: str, model: str = MODEL) -> None:
+    """Invoke LLM with a given tool_choice and print what happened."""
+    llm = ChatOpenAI(
+        model=model,
+        api_key=settings.openai_api_key,
+        base_url=settings.openai_base_url,
+    ).bind_tools(
+        [calculate, lookup_fact],
+        tool_choice=choice,
+    )
+    response = llm.invoke([HumanMessage(content=query)])
+
+    print(f"  Query: {query}")
+    if response.tool_calls:
+        for tc in response.tool_calls:
+            result = {
+                "calculate": calculate,
+                "lookup_fact": lookup_fact,
+            }[tc["name"]].invoke(tc["args"])
+            print(f"  -> Tool: {tc['name']}({tc['args']}) => {result}")
+    else:
+        print(f"  -> Direct: {response.content[:100]}")
+    print()
+
+
 def main():
-    llm = get_openai_llm()
-    llm_with_tools = llm.bind_tools([calculate, lookup_fact])
+    query = "What is 15 * 27?"
 
-    queries = [
-        ("What is 15 * 27?", "math -- should call calculate"),
-        ("What is the speed of light?", "fact lookup -- should call lookup_fact"),
-        ("What is the capital of France?", "general knowledge -- no tool needed"),
-    ]
+    print('=== tool_choice: "auto" (default, model decides) ===\n')
+    show("auto", query)
+    print('=== tool_choice: "required" (must call at least one tool) ===\n')
+    show("required", query)
+    print('=== tool_choice: "calculate" (must call this specific tool) ===\n')
+    show("calculate", query)
+    print('=== tool_choice: "calculate" on a non-math query ===\n')
+    show("calculate", "What is the capital of France?")
 
-    print("=== Bound Tools: LLM decides when to use tools ===\n")
+    print('=== tool_choice: "none" (must not call any tool) ===\n')
+    print('  Note: openai/gpt-oss-20b:free does not support tool_choice="none".')
+    try:
+        show("none", query)
+    except Exception as e:
+        print(f"  ERROR: {e}\n")
 
-    for query, expectation in queries:
-        print(f"Query: {query}")
-        print(f"  Expected: {expectation}")
-
-        response = llm_with_tools.invoke([HumanMessage(content=query)])
-
-        if response.tool_calls:
-            for tc in response.tool_calls:
-                print(f"  -> Tool: {tc['name']}({tc['args']})")
-                # Execute and show result
-                tool_map = {"calculate": calculate, "lookup_fact": lookup_fact}
-                if tc["name"] in tool_map:
-                    result = tool_map[tc["name"]].invoke(tc["args"])
-                    print(f"     Result: {result}")
-        else:
-            print(f"  -> Direct: {response.content[:100]}")
-        print()
+    print("=== Takeaways ===\n")
+    print('1. tool_choice="auto"       — model decides (default)')
+    print('2. tool_choice="required"   — must call at least one tool')
+    print('3. tool_choice="calculate"  — must call this specific tool')
+    print(
+        '4. tool_choice="none"       — must not call any tool (not all models support it)'
+    )
+    print()
+    print("Caveat: tool_choice support depends on the model and provider.")
+    print('  - gpt-oss-20b:free: supports auto/required/specific, not "none"')
+    print('  - gpt-4.1-mini: supports all modes including "none"')
 
 
 if __name__ == "__main__":
