@@ -15,9 +15,10 @@ from typing import Annotated
 from langchain_core.messages import AIMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 
-class AccumulatorState(dict):
+class AccumulatorState(TypedDict):
     messages: Annotated[list, add_messages]
     counter: Annotated[int, add]
     label: str
@@ -65,13 +66,15 @@ def main():
     print("=== Executing Graph ===")
     result = app.invoke({"messages": [], "counter": 0, "label": "start"})
 
-    print(f"\n=== Final State ===")
+    print("\n=== Final State ===")
     print(f"Messages ({len(result['messages'])} -- accumulated by add_messages):")
     for m in result["messages"]:
         print(f"  [{m.type}] {m.content}")
 
     print(f"\nCounter: {result['counter']} (0 + 1 + 1 + 0 = 2 -- node_3 didn't add)")
-    print(f"Label: '{result['label']}' (last-write-wins -- 'final' overwrote 'after_node_2')")
+    print(
+        f"Label: '{result['label']}' (last-write-wins -- 'final' overwrote 'after_node_2')"
+    )
 
     # Demonstrate reducer behavior
     print("\n=== Reducer Behavior Summary ===")

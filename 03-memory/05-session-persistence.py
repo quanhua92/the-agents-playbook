@@ -57,7 +57,9 @@ async def main():
         # Manually corrupt a line
         with open(session_path, "a") as f:
             f.write("THIS IS NOT JSON\n")
-            f.write('{"role": "assistant", "content": "The capital of Japan is Tokyo."}\n')
+            f.write(
+                '{"role": "assistant", "content": "The capital of Japan is Tokyo."}\n'
+            )
 
         recovered = await session.load(session_path)
         print(f"Loaded {len(recovered)} valid messages (1 malformed skipped)")

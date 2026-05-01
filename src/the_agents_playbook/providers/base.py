@@ -18,7 +18,6 @@ from the_agents_playbook.providers.types import (
     RequestLog,
     ResponseChunk,
     RetryConfig,
-    StreamUsage,
 )
 
 logger = logging.getLogger(__name__)
@@ -218,7 +217,7 @@ class BaseProvider(ABC):
                 if attempt == cfg.max_retries:
                     raise
 
-                delay = min(cfg.base_delay * (2 ** attempt), cfg.max_delay)
+                delay = min(cfg.base_delay * (2**attempt), cfg.max_delay)
                 if cfg.jitter:
                     delay *= random.uniform(0.5, 1.5)
 
@@ -237,7 +236,7 @@ class BaseProvider(ABC):
                 if attempt == cfg.max_retries:
                     raise last_error
 
-                delay = min(cfg.base_delay * (2 ** attempt), cfg.max_delay)
+                delay = min(cfg.base_delay * (2**attempt), cfg.max_delay)
                 if cfg.jitter:
                     delay *= random.uniform(0.5, 1.5)
 

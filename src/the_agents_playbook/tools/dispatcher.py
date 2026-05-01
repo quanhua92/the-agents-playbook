@@ -57,7 +57,9 @@ class ToolDispatcher:
             raise ToolArgumentError("unknown", f"Invalid JSON: {e}")
 
         if not isinstance(args, dict):
-            raise ToolArgumentError("unknown", f"Expected JSON object, got {type(args).__name__}")
+            raise ToolArgumentError(
+                "unknown", f"Expected JSON object, got {type(args).__name__}"
+            )
 
         return args
 
@@ -112,15 +114,26 @@ class ToolDispatcher:
 
         except ToolNotFoundError as e:
             logger.warning("Tool not found: %s", e.name)
-            return (tool_call_id or "", ToolResult(output=f"Tool not found: {e.name}", error=True))
+            return (
+                tool_call_id or "",
+                ToolResult(output=f"Tool not found: {e.name}", error=True),
+            )
 
         except ToolArgumentError as e:
-            logger.warning("Argument validation failed for %s: %s", e.tool_name, e.reason)
-            return (tool_call_id or "", ToolResult(output=f"Invalid arguments: {e.reason}", error=True))
+            logger.warning(
+                "Argument validation failed for %s: %s", e.tool_name, e.reason
+            )
+            return (
+                tool_call_id or "",
+                ToolResult(output=f"Invalid arguments: {e.reason}", error=True),
+            )
 
         except Exception as e:
             logger.exception("Unexpected error dispatching tool %s", tool_name)
-            return (tool_call_id or "", ToolResult(output=f"Tool execution failed: {e}", error=True))
+            return (
+                tool_call_id or "",
+                ToolResult(output=f"Tool execution failed: {e}", error=True),
+            )
 
     async def dispatch_all(
         self,

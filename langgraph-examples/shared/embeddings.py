@@ -5,7 +5,6 @@ Uses httpx directly (no langchain dependency) for embedding calls.
 """
 
 import logging
-from typing import Any
 
 import httpx
 import numpy as np

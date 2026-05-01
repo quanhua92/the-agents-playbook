@@ -8,7 +8,6 @@ clawability: the code must be simple enough for the agent to reason about.
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -100,21 +99,25 @@ class SelfReviewer:
         full_path = self._source_root / file_path
 
         if not full_path.exists():
-            report.add_finding(ReviewFinding(
-                file_path=str(file_path),
-                severity="issue",
-                description=f"File not found: {full_path}",
-            ))
+            report.add_finding(
+                ReviewFinding(
+                    file_path=str(file_path),
+                    severity="issue",
+                    description=f"File not found: {full_path}",
+                )
+            )
             return report
 
         try:
             lines = full_path.read_text().splitlines()
         except Exception as exc:
-            report.add_finding(ReviewFinding(
-                file_path=str(file_path),
-                severity="issue",
-                description=f"Could not read file: {exc}",
-            ))
+            report.add_finding(
+                ReviewFinding(
+                    file_path=str(file_path),
+                    severity="issue",
+                    description=f"Could not read file: {exc}",
+                )
+            )
             return report
 
         # Simple heuristic analysis
@@ -122,7 +125,9 @@ class SelfReviewer:
 
         return report
 
-    def _analyze_lines(self, lines: list[str], file_path: str, report: SelfReviewReport) -> None:
+    def _analyze_lines(
+        self, lines: list[str], file_path: str, report: SelfReviewReport
+    ) -> None:
         """Run simple heuristic checks on file lines.
 
         In a real implementation, the LLM would do this analysis.
@@ -133,30 +138,36 @@ class SelfReviewer:
 
             # Check for very long lines (>120 chars)
             if len(stripped) > 120:
-                report.add_finding(ReviewFinding(
-                    file_path=file_path,
-                    line_range=str(i),
-                    severity="suggestion",
-                    description=f"Long line ({len(stripped)} chars): consider splitting",
-                ))
+                report.add_finding(
+                    ReviewFinding(
+                        file_path=file_path,
+                        line_range=str(i),
+                        severity="suggestion",
+                        description=f"Long line ({len(stripped)} chars): consider splitting",
+                    )
+                )
 
             # Check for bare except
             if stripped.startswith("except:"):
-                report.add_finding(ReviewFinding(
-                    file_path=file_path,
-                    line_range=str(i),
-                    severity="issue",
-                    description="Bare except: catches all exceptions including KeyboardInterrupt",
-                ))
+                report.add_finding(
+                    ReviewFinding(
+                        file_path=file_path,
+                        line_range=str(i),
+                        severity="issue",
+                        description="Bare except: catches all exceptions including KeyboardInterrupt",
+                    )
+                )
 
             # Check for TODO/FIXME without a ticket reference
             if "TODO" in stripped or "FIXME" in stripped:
-                report.add_finding(ReviewFinding(
-                    file_path=file_path,
-                    line_range=str(i),
-                    severity="info",
-                    description=f"Found TODO/FIXME marker",
-                ))
+                report.add_finding(
+                    ReviewFinding(
+                        file_path=file_path,
+                        line_range=str(i),
+                        severity="info",
+                        description="Found TODO/FIXME marker",
+                    )
+                )
 
     def review_directory(self, pattern: str = "**/*.py") -> SelfReviewReport:
         """Review all Python files under source_root matching a glob pattern.

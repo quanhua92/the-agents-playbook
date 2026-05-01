@@ -52,30 +52,36 @@ def make_mock_provider():
     import json
 
     # First call: tool call, second call: text response
-    provider.send_message = AsyncMock(side_effect=[
-        MessageResponse(
-            message=OutputMessage(
-                role="assistant",
-                content=None,
-                tool_calls=[{
-                    "id": "call_1",
-                    "type": "function",
-                    "function": {
-                        "name": "echo",
-                        "arguments": json.dumps({"message": "hello from agent"}),
-                    },
-                }],
+    provider.send_message = AsyncMock(
+        side_effect=[
+            MessageResponse(
+                message=OutputMessage(
+                    role="assistant",
+                    content=None,
+                    tool_calls=[
+                        {
+                            "id": "call_1",
+                            "type": "function",
+                            "function": {
+                                "name": "echo",
+                                "arguments": json.dumps(
+                                    {"message": "hello from agent"}
+                                ),
+                            },
+                        }
+                    ],
+                ),
+                stop_reason="tool_calls",
             ),
-            stop_reason="tool_calls",
-        ),
-        MessageResponse(
-            message=OutputMessage(
-                role="assistant",
-                content="I echoed your message and got back the result!",
+            MessageResponse(
+                message=OutputMessage(
+                    role="assistant",
+                    content="I echoed your message and got back the result!",
+                ),
+                stop_reason="stop",
             ),
-            stop_reason="stop",
-        ),
-    ])
+        ]
+    )
 
     return provider
 
@@ -86,6 +92,7 @@ def make_provider():
         return make_mock_provider()
     else:
         from the_agents_playbook.providers import OpenAIProvider
+
         return OpenAIProvider()
 
 

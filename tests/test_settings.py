@@ -1,9 +1,5 @@
 """Tests for validate_config in settings.py."""
 
-from unittest.mock import patch
-
-import pytest
-
 from the_agents_playbook.settings import Settings, validate_config
 
 
@@ -110,7 +106,9 @@ class TestValidateConfig:
         )
         warnings = validate_config(cfg)
         # This should NOT warn because openrouter does route anthropic models
-        assert not any("anthropic" in w.lower() and "may not route" in w.lower() for w in warnings)
+        assert not any(
+            "anthropic" in w.lower() and "may not route" in w.lower() for w in warnings
+        )
 
     def test_anthropic_model_on_non_anthropic_url(self):
         cfg = _make_settings(

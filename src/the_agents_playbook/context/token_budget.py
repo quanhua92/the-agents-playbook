@@ -66,17 +66,20 @@ class TokenBudget:
         if self._reserved + tokens > self.total - self.reserved_for_response:
             logger.debug(
                 "Reservation failed: need %d, have %d available",
-                tokens, self.available,
+                tokens,
+                self.available,
             )
             return False
 
         self._reserved += tokens
-        self._reservations.append({
-            "tokens": tokens,
-            "reserved_total": self._reserved,
-            "available": self.available,
-            "timestamp": monotonic(),
-        })
+        self._reservations.append(
+            {
+                "tokens": tokens,
+                "reserved_total": self._reserved,
+                "available": self.available,
+                "timestamp": monotonic(),
+            }
+        )
         return True
 
     def release(self, tokens: int) -> None:
@@ -165,7 +168,9 @@ class UsageTracker:
         print(tracker.summary())
     """
 
-    def __init__(self, custom_pricing: dict[str, tuple[float, float]] | None = None) -> None:
+    def __init__(
+        self, custom_pricing: dict[str, tuple[float, float]] | None = None
+    ) -> None:
         self._records: list[UsageRecord] = []
         self._pricing = {**MODEL_PRICING}
         if custom_pricing:
@@ -214,7 +219,9 @@ class UsageTracker:
                 output_cost = r.output_tokens * pricing[1] / 1_000_000
                 cost += input_cost + output_cost
             else:
-                logger.debug("No pricing for model %s — skipping cost estimate", r.model)
+                logger.debug(
+                    "No pricing for model %s — skipping cost estimate", r.model
+                )
         return cost
 
     def by_model(self) -> dict[str, dict[str, Any]]:

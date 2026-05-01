@@ -10,7 +10,9 @@ from the_agents_playbook.tools.protocol import ToolResult
 
 class TestRepairResult:
     def test_success(self):
-        r = RepairResult(success=True, attempts=2, final_output="ok", error_history=["err1"])
+        r = RepairResult(
+            success=True, attempts=2, final_output="ok", error_history=["err1"]
+        )
         assert r.success is True
         assert r.attempts == 2
         assert r.final_output == "ok"
@@ -45,28 +47,34 @@ class TestRepairLoop:
         assert result.final_output == "done"
 
     async def test_retries_on_error_result(self, loop, registry):
-        registry.dispatch = AsyncMock(side_effect=[
-            ToolResult(output="fail1", error=True),
-            ToolResult(output="fail2", error=True),
-            ToolResult(output="ok"),
-        ])
+        registry.dispatch = AsyncMock(
+            side_effect=[
+                ToolResult(output="fail1", error=True),
+                ToolResult(output="fail2", error=True),
+                ToolResult(output="ok"),
+            ]
+        )
         result = await loop.repair("tool", {})
         assert result.success is True
         assert result.attempts == 3
         assert len(result.error_history) == 2
 
     async def test_retries_on_exception(self, loop, registry):
-        registry.dispatch = AsyncMock(side_effect=[
-            RuntimeError("boom"),
-            RuntimeError("bam"),
-            ToolResult(output="recovered"),
-        ])
+        registry.dispatch = AsyncMock(
+            side_effect=[
+                RuntimeError("boom"),
+                RuntimeError("bam"),
+                ToolResult(output="recovered"),
+            ]
+        )
         result = await loop.repair("tool", {})
         assert result.success is True
         assert result.attempts == 3
 
     async def test_exhausts_retries(self, loop, registry):
-        registry.dispatch = AsyncMock(return_value=ToolResult(output="fail", error=True))
+        registry.dispatch = AsyncMock(
+            return_value=ToolResult(output="fail", error=True)
+        )
         result = await loop.repair("tool", {})
         assert result.success is False
         assert result.attempts == 3

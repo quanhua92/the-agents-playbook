@@ -48,18 +48,22 @@ You are a helpful coding assistant.
         builder = ContextBuilder(max_tokens=4096)
 
         builder.add_static(soul_layer)
-        builder.add_static(ContextLayer(
-            name="world_rules",
-            content="Files are in Unix format. Python 3.12+.",
-            priority=LayerPriority.STATIC,
-            order=1,
-        ))
+        builder.add_static(
+            ContextLayer(
+                name="world_rules",
+                content="Files are in Unix format. Python 3.12+.",
+                priority=LayerPriority.STATIC,
+                order=1,
+            )
+        )
 
-        builder.add_semi_stable(ContextLayer(
-            name="user_preferences",
-            content="User prefers Python. No unnecessary comments.",
-            priority=LayerPriority.SEMI_STABLE,
-        ))
+        builder.add_semi_stable(
+            ContextLayer(
+                name="user_preferences",
+                content="User prefers Python. No unnecessary comments.",
+                priority=LayerPriority.SEMI_STABLE,
+            )
+        )
 
         builder.add_dynamic(git_layer)
         builder.add_dynamic(date_layer)
@@ -82,7 +86,9 @@ You are a helpful coding assistant.
         print()
         print("Layer breakdown:")
         for layer_info in report["layer_breakdown"]:
-            print(f"  {layer_info['priority']:12s} {layer_info['name']:20s} ~{layer_info['tokens']} tokens")
+            print(
+                f"  {layer_info['priority']:12s} {layer_info['name']:20s} ~{layer_info['tokens']} tokens"
+            )
 
         # --- Fluent API chaining ---
 
@@ -99,13 +105,15 @@ You are a helpful coding assistant.
         # --- Token budget warning ---
 
         tiny_builder = ContextBuilder(max_tokens=10)
-        tiny_builder.add_static(ContextLayer(
-            name="big",
-            content="x" * 100,
-        ))
+        tiny_builder.add_static(
+            ContextLayer(
+                name="big",
+                content="x" * 100,
+            )
+        )
         # build() warns but doesn't raise
         tiny_builder.build()
-        print(f"✓ Over-budget prompt still builds (logs warning)")
+        print("✓ Over-budget prompt still builds (logs warning)")
 
 
 if __name__ == "__main__":

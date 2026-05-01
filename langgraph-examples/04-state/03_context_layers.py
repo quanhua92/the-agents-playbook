@@ -20,14 +20,15 @@ from langchain_core.messages import SystemMessage
 
 
 class LayerPriority(IntEnum):
-    STATIC = 0       # System instructions, world rules (rarely changes)
+    STATIC = 0  # System instructions, world rules (rarely changes)
     SEMI_STABLE = 1  # Memory, preferences (changes per session)
-    DYNAMIC = 2      # Date, git status, runtime context (every turn)
+    DYNAMIC = 2  # Date, git status, runtime context (every turn)
 
 
 @dataclass
 class ContextLayer:
     """A single section of the system prompt."""
+
     name: str
     content: str
     priority: LayerPriority = LayerPriority.STATIC
@@ -67,47 +68,57 @@ class LangGraphContextBuilder:
 
     def build_message(self) -> SystemMessage:
         sorted_layers = sorted(self._layers)
-        sections = [l.content for l in sorted_layers if l.content.strip()]
+        sections = [layer.content for layer in sorted_layers if layer.content.strip()]
         return SystemMessage(content="\n\n".join(sections))
 
     def build_report(self) -> list[dict]:
         sorted_layers = sorted(self._layers)
         return [
             {
-                "name": l.name,
-                "priority": l.priority.name,
-                "chars": len(l.content),
+                "name": layer.name,
+                "priority": layer.priority.name,
+                "chars": len(layer.content),
             }
-            for l in sorted_layers
+            for layer in sorted_layers
         ]
 
 
 def main():
     builder = LangGraphContextBuilder()
 
-    builder.add_static(ContextLayer(
-        name="identity",
-        content="You are a helpful coding assistant.",
-    ))
-    builder.add_static(ContextLayer(
-        name="rules",
-        content="Always show your work. Use Python 3.12+.",
-        order=1,
-    ))
-    builder.add_semi_stable(ContextLayer(
-        name="preferences",
-        content="User prefers concise answers with code examples.",
-    ))
-    builder.add_dynamic(ContextLayer(
-        name="runtime",
-        content=f"Current date: {datetime.now().strftime('%Y-%m-%d')}",
-    ))
+    builder.add_static(
+        ContextLayer(
+            name="identity",
+            content="You are a helpful coding assistant.",
+        )
+    )
+    builder.add_static(
+        ContextLayer(
+            name="rules",
+            content="Always show your work. Use Python 3.12+.",
+            order=1,
+        )
+    )
+    builder.add_semi_stable(
+        ContextLayer(
+            name="preferences",
+            content="User prefers concise answers with code examples.",
+        )
+    )
+    builder.add_dynamic(
+        ContextLayer(
+            name="runtime",
+            content=f"Current date: {datetime.now().strftime('%Y-%m-%d')}",
+        )
+    )
 
     system_msg = builder.build_message()
 
     print("=== Context Layer Report ===")
     for layer in builder.build_report():
-        print(f"  [{layer['priority']:12s}] {layer['name']:15s} ({layer['chars']} chars)")
+        print(
+            f"  [{layer['priority']:12s}] {layer['name']:15s} ({layer['chars']} chars)"
+        )
 
     print(f"\n=== Assembled System Message ({len(system_msg.content)} chars) ===")
     print(system_msg.content)

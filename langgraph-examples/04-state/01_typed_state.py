@@ -18,15 +18,17 @@ from typing import Any, Annotated
 from langchain_core.messages import BaseMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 
-class AgentState(dict):
+class AgentState(TypedDict):
     """LangGraph state definition.
 
     Contrast with root's WorkflowState dataclass:
     - Root: mutable dataclass with .set_context(), .get_context()
     - LangGraph: nodes return partial updates, reducers merge them
     """
+
     messages: Annotated[list[BaseMessage], add_messages]
     steps_completed: int
     metadata: dict[str, Any]
@@ -67,13 +69,15 @@ def main():
     app = graph.compile()
 
     print("=== Executing Graph ===")
-    result = app.invoke({
-        "messages": [],
-        "steps_completed": 0,
-        "metadata": {},
-    })
+    result = app.invoke(
+        {
+            "messages": [],
+            "steps_completed": 0,
+            "metadata": {},
+        }
+    )
 
-    print(f"\n=== Final State ===")
+    print("\n=== Final State ===")
     print(f"Steps completed: {result['steps_completed']}")
     print(f"Metadata: {result['metadata']}")
     print(f"Messages: {len(result['messages'])}")

@@ -23,7 +23,9 @@ async def run():
     request = MessageRequest(
         model=settings.openai_model,
         system="You are a helpful assistant. Keep answers brief.",
-        messages=[InputMessage(role="user", content="Explain streaming in one sentence.")],
+        messages=[
+            InputMessage(role="user", content="Explain streaming in one sentence.")
+        ],
         max_tokens=100,
     )
 

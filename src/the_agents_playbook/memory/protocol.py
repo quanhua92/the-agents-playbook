@@ -63,9 +63,7 @@ class BaseMemoryProvider(ABC):
         )
         await self.store(fact)
 
-    async def recall_by_segment(
-        self, segment: Any, top_k: int = 5
-    ) -> list[Any]:
+    async def recall_by_segment(self, segment: Any, top_k: int = 5) -> list[Any]:
         """Recall memories filtered by segment.
 
         Default implementation returns an empty list.
@@ -83,9 +81,7 @@ class BaseMemoryProvider(ABC):
 
     # --- Tag-aware methods ---
 
-    async def recall_by_tag(
-        self, segment: Any, tag: str, top_k: int = 5
-    ) -> list[Any]:
+    async def recall_by_tag(self, segment: Any, tag: str, top_k: int = 5) -> list[Any]:
         """Recall memories filtered by segment and tag.
 
         Tags provide freeform scoping within a segment (e.g. a PROJECT

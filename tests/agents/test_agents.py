@@ -5,7 +5,6 @@ import pytest
 from the_agents_playbook.agents.protocol import AgentEvent, BaseAgent
 from the_agents_playbook.agents.registry import AgentNotFoundError, AgentRegistry
 from the_agents_playbook.agents.dispatcher import AgentDispatcher
-from the_agents_playbook.agents.worker import WorkerAgent
 
 
 class DummyAgent(BaseAgent):
@@ -30,7 +29,9 @@ class DummyAgent(BaseAgent):
 
     async def run(self, prompt: str):
         yield AgentEvent(type="status", data={"message": "ok"}, source=self._name)
-        yield AgentEvent(type="text", data={"text": f"Response to: {prompt}"}, source=self._name)
+        yield AgentEvent(
+            type="text", data={"text": f"Response to: {prompt}"}, source=self._name
+        )
 
 
 class TestAgentEvent:
@@ -41,7 +42,9 @@ class TestAgentEvent:
         assert event.source == ""
 
     def test_with_source(self):
-        event = AgentEvent(type="tool_call", data={"tool_name": "x"}, source="researcher")
+        event = AgentEvent(
+            type="tool_call", data={"tool_name": "x"}, source="researcher"
+        )
         assert event.source == "researcher"
 
     def test_default_data(self):

@@ -12,15 +12,14 @@ Pattern:
   5. Graph proceeds based on the decision
 """
 
-from typing import Annotated, Literal
+from typing import Annotated
 
 from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.types import interrupt, Command
 from typing_extensions import TypedDict
-
-from shared import get_openai_llm
 
 
 class State(TypedDict):
@@ -42,24 +41,38 @@ def worker_node(state: State) -> dict:
     }
 
     # Interrupt for human approval
-    decision = interrupt({
-        "question": "Worker wants to send an email. Approve?",
-        "draft": draft,
-    })
+    decision = interrupt(
+        {
+            "question": "Worker wants to send an email. Approve?",
+            "draft": draft,
+        }
+    )
 
     # decision is the value passed via Command(resume=...)
     if isinstance(decision, str) and decision.lower() == "approve":
-        return {"messages": [HumanMessage(content="Email sent successfully!")], "draft_approved": True}
+        return {
+            "messages": [HumanMessage(content="Email sent successfully!")],
+            "draft_approved": True,
+        }
     else:
-        return {"messages": [HumanMessage(content="Draft was rejected.")], "draft_approved": False}
+        return {
+            "messages": [HumanMessage(content="Draft was rejected.")],
+            "draft_approved": False,
+        }
 
 
 def summarizer_node(state: State) -> dict:
     """Summarize the outcome."""
     if state.get("draft_approved"):
-        return {"messages": [HumanMessage(content="Summary: Action was approved and executed.")]}
+        return {
+            "messages": [
+                HumanMessage(content="Summary: Action was approved and executed.")
+            ]
+        }
     else:
-        return {"messages": [HumanMessage(content="Summary: Action was rejected by human.")]}
+        return {
+            "messages": [HumanMessage(content="Summary: Action was rejected by human.")]
+        }
     return {}
 
 
@@ -76,7 +89,7 @@ def build_graph():
     )
     graph.add_edge("summarizer", END)
 
-    return graph.compile()
+    return graph.compile(checkpointer=MemorySaver())
 
 
 def main():
@@ -86,7 +99,12 @@ def main():
 
     # Step 1: Run the graph — it will interrupt at the worker node
     print("Step 1: Running graph (will pause for approval)...")
-    result = graph.invoke({"messages": [HumanMessage(content="Send the weekly update")]})
+    result = graph.invoke(
+        {
+            "messages": [HumanMessage(content="Send the weekly update")],
+            "draft_approved": None,
+        }
+    )
     print(f"Messages: {[m.content for m in result['messages']]}\n")
 
     # Step 2: Resume with approval

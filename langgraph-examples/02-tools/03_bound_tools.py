@@ -21,6 +21,7 @@ In LangChain (via bind_tools or bind):
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 from shared import settings
 
@@ -51,7 +52,7 @@ def show(choice: str, query: str, model: str = MODEL) -> None:
     """Invoke LLM with a given tool_choice and print what happened."""
     llm = ChatOpenAI(
         model=model,
-        api_key=settings.openai_api_key,
+        api_key=SecretStr(settings.openai_api_key) if settings.openai_api_key else None,
         base_url=settings.openai_base_url,
     ).bind_tools(
         [calculate, lookup_fact],

@@ -95,7 +95,9 @@ class AgentDispatcher:
 
         logger.info(
             "Routed task '%s' to agent '%s' (score=%d)",
-            task[:50], best_agent.name, best_score,
+            task[:50],
+            best_agent.name,
+            best_score,
         )
         return best_agent
 

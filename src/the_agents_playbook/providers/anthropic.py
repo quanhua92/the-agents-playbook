@@ -9,7 +9,6 @@ import httpx
 from the_agents_playbook import settings
 from the_agents_playbook.providers.base import BaseProvider
 from the_agents_playbook.providers.types import (
-    InputMessage,
     MessageRequest,
     MessageResponse,
     OutputMessage,
@@ -58,9 +57,7 @@ class AnthropicProvider(BaseProvider):
             "model": request.model,
             "max_tokens": request.max_tokens,
             "temperature": request.temperature,
-            "messages": [
-                m.model_dump(exclude_none=True) for m in request.messages
-            ],
+            "messages": [m.model_dump(exclude_none=True) for m in request.messages],
         }
         if request.system:
             body["system"] = request.system
@@ -111,9 +108,7 @@ class AnthropicProvider(BaseProvider):
                     }
                 )
 
-        stop_reason = _STOP_REASON_MAP.get(
-            raw.get("stop_reason", "unknown"), "unknown"
-        )
+        stop_reason = _STOP_REASON_MAP.get(raw.get("stop_reason", "unknown"), "unknown")
 
         return MessageResponse(
             message=OutputMessage(

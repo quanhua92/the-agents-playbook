@@ -17,10 +17,18 @@ def main():
     print("=== Shannon Entropy ===")
     print(f"Certain (one option):      H = {shannon_entropy([1.0]):.4f} bits")
     print(f"Coin flip (50/50):         H = {shannon_entropy([0.5, 0.5]):.4f} bits")
-    print(f"Three-way uniform:         H = {shannon_entropy([1/3, 1/3, 1/3]):.4f} bits")
-    print(f"Eight-way uniform:         H = {shannon_entropy([1/8] * 8):.4f} bits (log2(8)=3.0)")
-    print(f"Skewed (90/5/5):          H = {shannon_entropy([0.9, 0.05, 0.05]):.4f} bits")
-    print(f"Very skewed (99/0.5/0.5): H = {shannon_entropy([0.99, 0.005, 0.005]):.4f} bits")
+    print(
+        f"Three-way uniform:         H = {shannon_entropy([1 / 3, 1 / 3, 1 / 3]):.4f} bits"
+    )
+    print(
+        f"Eight-way uniform:         H = {shannon_entropy([1 / 8] * 8):.4f} bits (log2(8)=3.0)"
+    )
+    print(
+        f"Skewed (90/5/5):          H = {shannon_entropy([0.9, 0.05, 0.05]):.4f} bits"
+    )
+    print(
+        f"Very skewed (99/0.5/0.5): H = {shannon_entropy([0.99, 0.005, 0.005]):.4f} bits"
+    )
     print()
 
     # --- Tool scoring scenarios ---

@@ -5,7 +5,6 @@ monitoring, and audit trails without modifying the agent core.
 """
 
 import asyncio
-from unittest.mock import AsyncMock
 
 from the_agents_playbook.guardrails import (
     ON_TOOL_CALL,
@@ -32,7 +31,9 @@ async def main():
     hooks.on(ON_TOOL_CALL, lambda **kw: log_handler("tool_call", **kw))
     hooks.on(ON_TOOL_RESULT, lambda **kw: log_handler("tool_result", **kw))
     hooks.on(ON_TURN_END, lambda **kw: log_handler("turn_end", **kw))
-    print(f"Registered {sum(len(hooks.handlers(e)) for e in [ON_TURN_START, ON_TOOL_CALL, ON_TOOL_RESULT, ON_TURN_END])} hooks")
+    print(
+        f"Registered {sum(len(hooks.handlers(e)) for e in [ON_TURN_START, ON_TOOL_CALL, ON_TOOL_RESULT, ON_TURN_END])} hooks"
+    )
     print()
 
     # --- Simulate an agent turn ---
@@ -42,13 +43,23 @@ async def main():
     await hooks.emit(ON_TURN_START, prompt="Fix the bug in auth.py")
     print("  Turn started")
 
-    await hooks.emit(ON_TOOL_CALL, tool_name="shell", arguments={"command": "grep -n 'bug' auth.py"})
+    await hooks.emit(
+        ON_TOOL_CALL, tool_name="shell", arguments={"command": "grep -n 'bug' auth.py"}
+    )
     print("  Tool called: shell")
 
-    await hooks.emit(ON_TOOL_RESULT, tool_name="shell", output="auth.py:42: # bug here", error=False, latency_ms=15.2)
+    await hooks.emit(
+        ON_TOOL_RESULT,
+        tool_name="shell",
+        output="auth.py:42: # bug here",
+        error=False,
+        latency_ms=15.2,
+    )
     print("  Tool result: OK (15.2ms)")
 
-    await hooks.emit(ON_TURN_END, response="Found the bug at line 42", total_tokens=450, tool_calls=1)
+    await hooks.emit(
+        ON_TURN_END, response="Found the bug at line 42", total_tokens=450, tool_calls=1
+    )
     print("  Turn ended")
     print()
 
@@ -66,6 +77,7 @@ async def main():
 
     print("\n=== Multiple Handlers ===")
     count = 0
+
     async def counter(**kw):
         nonlocal count
         count += 1

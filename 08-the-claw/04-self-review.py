@@ -7,7 +7,7 @@ SelfReviewer reads source files and produces a report with findings
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from the_agents_playbook.claw.self_review import ReviewFinding, SelfReviewReport, SelfReviewer
+from the_agents_playbook.claw.self_review import SelfReviewer
 
 
 def main():
@@ -46,7 +46,9 @@ def main():
         print(f"  Issues:         {len(report.issues())}")
         print(f"  Score:          {report.score():.1f}")
         for finding in report.findings:
-            print(f"    [{finding.severity}] {finding.file_path}:{finding.line_range} — {finding.description}")
+            print(
+                f"    [{finding.severity}] {finding.file_path}:{finding.line_range} — {finding.description}"
+            )
         print()
 
         # --- Review whole directory ---

@@ -101,7 +101,7 @@ class EvaluationHarness:
     def __init__(self, agent: Any = None) -> None:
         self._results: list[BenchmarkResult] = []
         self._agent = agent
-        self._evaluator: AgentEvaluator | None = None
+        self._evaluator: "AgentEvaluator | None" = None  # noqa: F821
 
     @property
     def results(self) -> list[BenchmarkResult]:
@@ -137,6 +137,7 @@ class EvaluationHarness:
         if self._agent and (expected or criteria or mode == "llm_judge"):
             if self._evaluator is None:
                 from .agent_evaluator import AgentEvaluator, EvalConfig
+
                 self._evaluator = AgentEvaluator(self._agent)
 
             config = EvalConfig(

@@ -54,8 +54,8 @@ class SessionCompactor:
         if tokens <= self._max_tokens:
             return messages
 
-        old = messages[:-self._keep_recent]
-        recent = messages[-self._keep_recent:]
+        old = messages[: -self._keep_recent]
+        recent = messages[-self._keep_recent :]
 
         summary_content = self._build_summary(old)
         summary_msg = {

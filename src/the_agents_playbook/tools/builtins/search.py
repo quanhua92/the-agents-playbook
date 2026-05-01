@@ -51,7 +51,9 @@ class WebSearchTool(Tool):
             "additionalProperties": False,
         }
 
-    async def execute(self, query: str, max_results: int = 5, **kwargs: Any) -> ToolResult:
+    async def execute(
+        self, query: str, max_results: int = 5, **kwargs: Any
+    ) -> ToolResult:
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.get(

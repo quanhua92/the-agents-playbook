@@ -12,7 +12,7 @@ In production, this pattern lets you:
 
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from shared import get_openai_llm
 
@@ -35,29 +35,59 @@ def recall_memory(query: str, segment: str = "all", top_k: int = 3) -> str:
 
     # Simulated memory store
     memories = [
-        MemoryRecord(content="User's name is Alice", source="user",
-                     segment=MemorySegment.IDENTITY),
-        MemoryRecord(content="Alice is proficient in Rust and Go", source="user",
-                     segment=MemorySegment.EXPERTISE),
-        MemoryRecord(content="Alice prefers dark mode", source="user",
-                     segment=MemorySegment.PREFERENCE),
-        MemoryRecord(content="Alice is a senior engineer at Acme Corp",
-                     source="user", segment=MemorySegment.RELATIONSHIP),
-        MemoryRecord(content="Alice wants to transition to staff engineer",
-                     source="user", segment=MemorySegment.GOAL),
-        MemoryRecord(content="User said responses were too verbose",
-                     source="user", segment=MemorySegment.FEEDBACK,
-                     tags=["verbosity"]),
-        MemoryRecord(content="Working on OAuth migration", source="user",
-                     segment=MemorySegment.PROJECT,
-                     tags=["auth-migration"]),
-        MemoryRecord(content="Auth service uses JWT with 15min expiry",
-                     source="tool", segment=MemorySegment.KNOWLEDGE,
-                     tags=["auth-migration"]),
-        MemoryRecord(content="Alice is at a coffee shop", source="user",
-                     segment=MemorySegment.CONTEXT),
-        MemoryRecord(content="Alice mentioned she's in a hurry today",
-                     source="user", segment=MemorySegment.CONTEXT),
+        MemoryRecord(
+            content="User's name is Alice",
+            source="user",
+            segment=MemorySegment.IDENTITY,
+        ),
+        MemoryRecord(
+            content="Alice is proficient in Rust and Go",
+            source="user",
+            segment=MemorySegment.EXPERTISE,
+        ),
+        MemoryRecord(
+            content="Alice prefers dark mode",
+            source="user",
+            segment=MemorySegment.PREFERENCE,
+        ),
+        MemoryRecord(
+            content="Alice is a senior engineer at Acme Corp",
+            source="user",
+            segment=MemorySegment.RELATIONSHIP,
+        ),
+        MemoryRecord(
+            content="Alice wants to transition to staff engineer",
+            source="user",
+            segment=MemorySegment.GOAL,
+        ),
+        MemoryRecord(
+            content="User said responses were too verbose",
+            source="user",
+            segment=MemorySegment.FEEDBACK,
+            tags=["verbosity"],
+        ),
+        MemoryRecord(
+            content="Working on OAuth migration",
+            source="user",
+            segment=MemorySegment.PROJECT,
+            tags=["auth-migration"],
+        ),
+        MemoryRecord(
+            content="Auth service uses JWT with 15min expiry",
+            source="tool",
+            segment=MemorySegment.KNOWLEDGE,
+            tags=["auth-migration"],
+        ),
+        MemoryRecord(
+            content="Alice is at a coffee shop",
+            source="user",
+            segment=MemorySegment.CONTEXT,
+        ),
+        MemoryRecord(
+            content="Alice mentioned she's in a hurry today",
+            source="user",
+            segment=MemorySegment.CONTEXT,
+        ),
     ]
 
     # Filter by segment if specified
@@ -99,10 +129,10 @@ def main():
     llm = get_openai_llm()
 
     # Build a ReAct agent with a recall_memory tool
-    agent = create_react_agent(
-        model=llm,
+    agent = create_agent(
+        llm,
         tools=[recall_memory],
-        prompt=(
+        system_prompt=(
             "You have access to a segmented memory system. "
             "Use recall_memory to look up user information. "
             "You can filter by segment type for more relevant results."
@@ -111,9 +141,11 @@ def main():
 
     # Scenario 1: Recall identity
     print("--- Querying identity memories ---")
-    result = agent.invoke({
-        "messages": [HumanMessage(content="What's my name?")],
-    })
+    result = agent.invoke(
+        {
+            "messages": [HumanMessage(content="What's my name?")],
+        }
+    )
     for msg in result["messages"]:
         role = getattr(msg, "type", "?")
         text = getattr(msg, "content", "")
@@ -125,11 +157,15 @@ def main():
 
     # Scenario 2: Recall project context
     print("--- Querying project memories ---")
-    result = agent.invoke({
-        "messages": [HumanMessage(
-            content="What am I working on? Search only project memories."
-        )],
-    })
+    result = agent.invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content="What am I working on? Search only project memories."
+                )
+            ],
+        }
+    )
     for msg in result["messages"]:
         role = getattr(msg, "type", "?")
         text = getattr(msg, "content", "")
@@ -141,11 +177,11 @@ def main():
 
     # Scenario 3: Recall expertise
     print("--- Querying expertise ---")
-    result = agent.invoke({
-        "messages": [HumanMessage(
-            content="What programming languages do I know?"
-        )],
-    })
+    result = agent.invoke(
+        {
+            "messages": [HumanMessage(content="What programming languages do I know?")],
+        }
+    )
     for msg in result["messages"]:
         role = getattr(msg, "type", "?")
         text = getattr(msg, "content", "")
@@ -157,12 +193,16 @@ def main():
 
     # Scenario 4: Recall goals and preferences together
     print("--- Querying goals and preferences ---")
-    result = agent.invoke({
-        "messages": [HumanMessage(
-            content="What are my career goals and how should you format "
-            "responses for me? Search all memories."
-        )],
-    })
+    result = agent.invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content="What are my career goals and how should you format "
+                    "responses for me? Search all memories."
+                )
+            ],
+        }
+    )
     for msg in result["messages"]:
         role = getattr(msg, "type", "?")
         text = getattr(msg, "content", "")
@@ -174,12 +214,16 @@ def main():
 
     # Scenario 5: Recall feedback to calibrate behavior
     print("--- Querying feedback ---")
-    result = agent.invoke({
-        "messages": [HumanMessage(
-            content="Have I given you any feedback about your responses? "
-            "Check feedback memories."
-        )],
-    })
+    result = agent.invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content="Have I given you any feedback about your responses? "
+                    "Check feedback memories."
+                )
+            ],
+        }
+    )
     for msg in result["messages"]:
         role = getattr(msg, "type", "?")
         text = getattr(msg, "content", "")
@@ -192,13 +236,18 @@ def main():
     # Scenario 6: Segment defaults table
     print("--- Segment defaults ---")
     from the_agents_playbook.memory import (
-        MemoryDecay, MemorySegment, MemoryRecord, MemoryLifecycle,
+        MemoryDecay,
+        MemorySegment,
+        MemoryRecord,
+        MemoryLifecycle,
         SEGMENT_DEFAULTS,
     )
 
     for segment, config in SEGMENT_DEFAULTS.items():
-        print(f"  {segment.value:15s} tier={config.tier.value:12s} "
-              f"importance={config.importance:.2f} decay_rate={config.decay_rate}")
+        print(
+            f"  {segment.value:15s} tier={config.tier.value:12s} "
+            f"importance={config.importance:.2f} decay_rate={config.decay_rate}"
+        )
 
     # Scenario 7: Show that context memories decay over time
     print("\n--- Demonstrating decay ---")
@@ -212,24 +261,51 @@ def main():
         print(f"  {label:30s} [{bar}] {value:.4f}")
 
     records = [
-        MemoryRecord(content="User's name is Alice", source="user",
-                     segment=MemorySegment.IDENTITY),
-        MemoryRecord(content="Alice is proficient in Rust and Go", source="user",
-                     segment=MemorySegment.EXPERTISE),
-        MemoryRecord(content="Alice prefers dark mode", source="user",
-                     segment=MemorySegment.PREFERENCE),
-        MemoryRecord(content="Alice is a senior engineer at Acme Corp",
-                     source="user", segment=MemorySegment.RELATIONSHIP),
-        MemoryRecord(content="Alice wants to transition to staff engineer",
-                     source="user", segment=MemorySegment.GOAL),
-        MemoryRecord(content="User said responses were too verbose",
-                     source="user", segment=MemorySegment.FEEDBACK),
-        MemoryRecord(content="Working on OAuth migration", source="user",
-                     segment=MemorySegment.PROJECT),
-        MemoryRecord(content="Auth service uses JWT with 15min expiry",
-                     source="tool", segment=MemorySegment.KNOWLEDGE),
-        MemoryRecord(content="Alice is at a coffee shop", source="user",
-                     segment=MemorySegment.CONTEXT),
+        MemoryRecord(
+            content="User's name is Alice",
+            source="user",
+            segment=MemorySegment.IDENTITY,
+        ),
+        MemoryRecord(
+            content="Alice is proficient in Rust and Go",
+            source="user",
+            segment=MemorySegment.EXPERTISE,
+        ),
+        MemoryRecord(
+            content="Alice prefers dark mode",
+            source="user",
+            segment=MemorySegment.PREFERENCE,
+        ),
+        MemoryRecord(
+            content="Alice is a senior engineer at Acme Corp",
+            source="user",
+            segment=MemorySegment.RELATIONSHIP,
+        ),
+        MemoryRecord(
+            content="Alice wants to transition to staff engineer",
+            source="user",
+            segment=MemorySegment.GOAL,
+        ),
+        MemoryRecord(
+            content="User said responses were too verbose",
+            source="user",
+            segment=MemorySegment.FEEDBACK,
+        ),
+        MemoryRecord(
+            content="Working on OAuth migration",
+            source="user",
+            segment=MemorySegment.PROJECT,
+        ),
+        MemoryRecord(
+            content="Auth service uses JWT with 15min expiry",
+            source="tool",
+            segment=MemorySegment.KNOWLEDGE,
+        ),
+        MemoryRecord(
+            content="Alice is at a coffee shop",
+            source="user",
+            segment=MemorySegment.CONTEXT,
+        ),
     ]
 
     time_points = [0, 1, 7, 30, 90, 365]
@@ -247,7 +323,8 @@ def main():
     print("The knowledge fact was recalled 10 times.\n")
     knowledge_record = MemoryRecord(
         content="Auth service uses JWT with 15min expiry",
-        source="tool", segment=MemorySegment.KNOWLEDGE,
+        source="tool",
+        segment=MemorySegment.KNOWLEDGE,
     )
     for _ in range(10):
         knowledge_record.record_access()
@@ -258,14 +335,22 @@ def main():
     # Scenario 9: Pruning — stale context gets removed
     print("\n--- Pruning stale memories ---\n")
     import time as _time
+
     now = _time.monotonic()
     stale = [
-        MemoryRecord(content="At coffee shop with spotty WiFi", source="user",
-                     segment=MemorySegment.CONTEXT),
-        MemoryRecord(content="In a hurry today", source="user",
-                     segment=MemorySegment.CONTEXT),
-        MemoryRecord(content="Working on OAuth migration", source="user",
-                     segment=MemorySegment.PROJECT),
+        MemoryRecord(
+            content="At coffee shop with spotty WiFi",
+            source="user",
+            segment=MemorySegment.CONTEXT,
+        ),
+        MemoryRecord(
+            content="In a hurry today", source="user", segment=MemorySegment.CONTEXT
+        ),
+        MemoryRecord(
+            content="Working on OAuth migration",
+            source="user",
+            segment=MemorySegment.PROJECT,
+        ),
     ]
     stale[0].timestamp = now - 365 * 86400
     stale[1].timestamp = now - 365 * 86400
@@ -273,7 +358,7 @@ def main():
     print(f"Records pruned: {len(pruned)}")
     for r in pruned:
         print(f"  [{r.lifecycle.value}] {r.content}")
-    print(f"\nRemaining active records:")
+    print("\nRemaining active records:")
     for r in stale:
         if r.lifecycle == MemoryLifecycle.ACTIVE:
             print(f"  [{r.segment.value}] {r.content}")
@@ -291,14 +376,24 @@ def main():
     print("\n--- Tag-based scoping ---")
     print("Tags group records across segments for scope clearing:\n")
     all_records = [
-        MemoryRecord(content="Working on OAuth migration", source="user",
-                     segment=MemorySegment.PROJECT, tags=["auth-migration"]),
-        MemoryRecord(content="Auth service uses JWT with 15min expiry",
-                     source="tool", segment=MemorySegment.KNOWLEDGE,
-                     tags=["auth-migration"]),
-        MemoryRecord(content="User said responses were too verbose",
-                     source="user", segment=MemorySegment.FEEDBACK,
-                     tags=["verbosity"]),
+        MemoryRecord(
+            content="Working on OAuth migration",
+            source="user",
+            segment=MemorySegment.PROJECT,
+            tags=["auth-migration"],
+        ),
+        MemoryRecord(
+            content="Auth service uses JWT with 15min expiry",
+            source="tool",
+            segment=MemorySegment.KNOWLEDGE,
+            tags=["auth-migration"],
+        ),
+        MemoryRecord(
+            content="User said responses were too verbose",
+            source="user",
+            segment=MemorySegment.FEEDBACK,
+            tags=["verbosity"],
+        ),
     ]
     tagged = [r for r in all_records if "auth-migration" in r.tags]
     for r in tagged:

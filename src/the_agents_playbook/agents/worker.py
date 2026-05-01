@@ -16,7 +16,6 @@ Usage:
 """
 
 from collections.abc import AsyncGenerator
-from typing import Any
 
 from ..loop.agent import Agent, AgentConfig
 from ..providers.base import BaseProvider

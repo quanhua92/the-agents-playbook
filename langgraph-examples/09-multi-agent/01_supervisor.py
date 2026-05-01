@@ -1,7 +1,7 @@
 """01_supervisor.py -- Supervisor pattern with LangGraph conditional edges.
 
 A supervisor agent routes tasks to specialized worker agents using
-conditional edges. Each worker is a create_react_agent with its own
+conditional edges. Each worker is a create_agent with its own
 scoped tool set.
 
 Pattern:
@@ -11,16 +11,13 @@ Pattern:
   4. All workers converge back to supervisor for synthesis
 """
 
-from typing import Annotated, Literal
+from typing import Annotated
 
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
-from langgraph.prebuilt import create_react_agent
 from typing_extensions import TypedDict
-
-from shared import get_openai_llm
 
 
 @tool
@@ -60,14 +57,18 @@ def supervisor_node(state: State) -> dict:
     lower_msg = last_message.lower()
     if any(word in lower_msg for word in ["search", "find", "look up", "research"]):
         next_agent = "researcher"
-    elif any(word in lower_msg for word in ["calculate", "math", "compute", "how much"]):
+    elif any(
+        word in lower_msg for word in ["calculate", "math", "compute", "how much"]
+    ):
         next_agent = "calculator"
     else:
         next_agent = "writer"
 
     return {
         "messages": [
-            HumanMessage(content=f"[Supervisor] Routing to {next_agent}: {last_message[:100]}")
+            HumanMessage(
+                content=f"[Supervisor] Routing to {next_agent}: {last_message[:100]}"
+            )
         ],
         "next_agent": next_agent,
     }
@@ -94,9 +95,7 @@ def calculator_node(state: State) -> dict:
 def writer_node(state: State) -> dict:
     """Writer worker — generates text, no tools."""
     return {
-        "messages": [
-            HumanMessage(content="[Writer] Composing response...")
-        ],
+        "messages": [HumanMessage(content="[Writer] Composing response...")],
     }
 
 
@@ -104,7 +103,9 @@ def synthesize_node(state: State) -> dict:
     """Combine worker output into final response."""
     return {
         "messages": [
-            HumanMessage(content="[Supervisor] Synthesized final response from worker output.")
+            HumanMessage(
+                content="[Supervisor] Synthesized final response from worker output."
+            )
         ],
     }
 
@@ -154,11 +155,17 @@ def main():
 
     for task in tasks:
         print(f"--- Task: {task} ---")
-        result = graph.invoke({"messages": [HumanMessage(content=task)]})
+        result = graph.invoke(
+            {"messages": [HumanMessage(content=task)], "next_agent": ""}
+        )
         for msg in result["messages"]:
             content = msg.content
-            if content and ("[Supervisor]" in content or "[Researcher]" in content
-                           or "[Calculator]" in content or "[Writer]" in content):
+            if content and (
+                "[Supervisor]" in content
+                or "[Researcher]" in content
+                or "[Calculator]" in content
+                or "[Writer]" in content
+            ):
                 print(f"  {content}")
         print()
 

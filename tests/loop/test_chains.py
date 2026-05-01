@@ -59,7 +59,11 @@ class TestToolChain:
     def test_with_steps(self):
         chain = ToolChain(
             steps=[
-                {"tool_name": "echo", "arguments": {"msg": "hi"}, "result": ToolResult(output="hi")},
+                {
+                    "tool_name": "echo",
+                    "arguments": {"msg": "hi"},
+                    "result": ToolResult(output="hi"),
+                },
             ],
             final_output="hi",
             confidence=0.9,
@@ -97,38 +101,46 @@ class TestToolChainer:
         assert chainer.should_chain(result, 2.0) is True  # above threshold 1.0
 
     async def test_execute_chain_single_step(self, chainer):
-        chain = await chainer.execute_chain({
-            "tool_name": "echo",
-            "arguments": {"message": "hello"},
-        })
+        chain = await chainer.execute_chain(
+            {
+                "tool_name": "echo",
+                "arguments": {"message": "hello"},
+            }
+        )
         assert len(chain.steps) == 1
         assert chain.final_output == "hello"
         assert chain.steps[0]["tool_name"] == "echo"
 
     async def test_execute_chain_with_error_tool(self, chainer):
-        chain = await chainer.execute_chain({
-            "tool_name": "fail",
-            "arguments": {},
-        })
+        chain = await chainer.execute_chain(
+            {
+                "tool_name": "fail",
+                "arguments": {},
+            }
+        )
         assert len(chain.steps) == 1
         assert chain.steps[0]["result"].error is True
         assert chain.confidence == 0.0
 
     async def test_execute_chain_unknown_tool(self, chainer):
-        chain = await chainer.execute_chain({
-            "tool_name": "nonexistent",
-            "arguments": {},
-        })
+        chain = await chainer.execute_chain(
+            {
+                "tool_name": "nonexistent",
+                "arguments": {},
+            }
+        )
         assert len(chain.steps) == 1
         assert chain.steps[0]["result"].error is True
         assert chain.confidence == 0.0
 
     async def test_execute_chain_respects_max_length(self, registry):
         chainer = ToolChainer(registry, max_chain_length=1)
-        chain = await chainer.execute_chain({
-            "tool_name": "echo",
-            "arguments": {"message": "test"},
-        })
+        chain = await chainer.execute_chain(
+            {
+                "tool_name": "echo",
+                "arguments": {"message": "test"},
+            }
+        )
         assert len(chain.steps) == 1
 
     async def test_should_chain_no_scores_stops_on_error(self, chainer):

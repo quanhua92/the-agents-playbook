@@ -8,7 +8,6 @@ import math
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from time import monotonic
-from typing import Any
 
 import numpy as np
 
@@ -33,16 +32,13 @@ class BaseMemoryProvider(ABC):
     """Abstract interface for memory storage and retrieval."""
 
     @abstractmethod
-    async def store(self, fact: Fact) -> None:
-        ...
+    async def store(self, fact: Fact) -> None: ...
 
     @abstractmethod
-    async def recall(self, query: str, top_k: int = 5) -> list[Fact]:
-        ...
+    async def recall(self, query: str, top_k: int = 5) -> list[Fact]: ...
 
     @abstractmethod
-    async def consolidate(self) -> None:
-        ...
+    async def consolidate(self) -> None: ...
 
 
 class InMemoryVectorStore(BaseMemoryProvider):

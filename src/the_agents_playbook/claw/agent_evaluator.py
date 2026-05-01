@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from .llm_judge import JudgeResult, LLMJudge
+from .llm_judge import LLMJudge
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class AgentEvaluator:
         self,
         task: str,
         config: EvalConfig | None = None,
-    ) -> "BenchmarkResult":
+    ) -> "BenchmarkResult":  # noqa: F821
         """Run the agent on a task and evaluate the result.
 
         Args:
@@ -113,14 +113,18 @@ class AgentEvaluator:
         # Score based on mode
         if config.mode == "llm_judge":
             score, success = await self._score_with_judge(
-                task, run_result, config,
+                task,
+                run_result,
+                config,
             )
         else:
             score, success = self._score_deterministic(
-                run_result, config.expected_substring,
+                run_result,
+                config.expected_substring,
             )
 
         from .evaluation import BenchmarkResult
+
         return BenchmarkResult(
             task=task,
             success=success,
@@ -135,7 +139,7 @@ class AgentEvaluator:
         self,
         tasks: list[dict[str, Any]],
         config: EvalConfig | None = None,
-    ) -> "SuiteResult":
+    ) -> "SuiteResult":  # noqa: F821
         """Evaluate multiple tasks and return aggregated results.
 
         Args:
@@ -153,10 +157,18 @@ class AgentEvaluator:
         for task_def in tasks:
             task_config = EvalConfig(
                 mode=task_def.get("mode", config.mode if config else "deterministic"),
-                expected_substring=task_def.get("expected", config.expected_substring if config else None),
-                judge_criteria=task_def.get("criteria", config.judge_criteria if config else {}),
-                judge_provider=task_def.get("judge_provider", config.judge_provider if config else None),
-                judge_model=task_def.get("judge_model", config.judge_model if config else "gpt-4o"),
+                expected_substring=task_def.get(
+                    "expected", config.expected_substring if config else None
+                ),
+                judge_criteria=task_def.get(
+                    "criteria", config.judge_criteria if config else {}
+                ),
+                judge_provider=task_def.get(
+                    "judge_provider", config.judge_provider if config else None
+                ),
+                judge_model=task_def.get(
+                    "judge_model", config.judge_model if config else "gpt-4o"
+                ),
             )
             result = await self.evaluate(task_def["task"], task_config)
             results.append(result)
@@ -164,7 +176,9 @@ class AgentEvaluator:
         return SuiteResult(results=results)
 
     async def _run_agent(
-        self, task: str, timeout_seconds: float,
+        self,
+        task: str,
+        timeout_seconds: float,
     ) -> AgentRunResult:
         """Execute the agent and collect all events."""
         run_result = AgentRunResult()
@@ -201,7 +215,10 @@ class AgentEvaluator:
             # No expected string — pass if we got any response
             return (1.0, True) if run_result.final_response else (0.0, False)
 
-        if run_result.final_response and expected_substring in run_result.final_response:
+        if (
+            run_result.final_response
+            and expected_substring in run_result.final_response
+        ):
             return 1.0, True
 
         return 0.0, False
@@ -217,7 +234,9 @@ class AgentEvaluator:
             return 0.0, False
 
         if not config.judge_criteria:
-            logger.warning("LLM judge mode but no criteria — falling back to deterministic")
+            logger.warning(
+                "LLM judge mode but no criteria — falling back to deterministic"
+            )
             return 1.0, True
 
         if self._judge is None:

@@ -1,7 +1,5 @@
 """Tests for memory/vector_memory.py — InMemoryVectorStore."""
 
-from time import monotonic
-
 import numpy as np
 import pytest
 
@@ -44,7 +42,9 @@ async def test_store_and_size(store: InMemoryVectorStore):
     assert store.size == 1
 
 
-async def test_store_computes_embedding(store: InMemoryVectorStore, embedder: FixedEmbedder):
+async def test_store_computes_embedding(
+    store: InMemoryVectorStore, embedder: FixedEmbedder
+):
     fact = Fact(content="hello", source="test")
     assert fact.embedding is None
     await store.store(fact)
@@ -95,7 +95,9 @@ async def test_search_by_similarity(embedder: FixedEmbedder):
     assert score > 0.9  # near-identical embedding
 
     # Query with min_score filter
-    scored = await store.search_by_similarity("completely different topic", min_score=0.99)
+    scored = await store.search_by_similarity(
+        "completely different topic", min_score=0.99
+    )
     assert len(scored) == 0
 
 
@@ -105,6 +107,7 @@ async def test_time_decay_ranks_fresh_higher(embedder: FixedEmbedder):
     await store.store(Fact(content="old fact", source="old"))
 
     import asyncio
+
     await asyncio.sleep(0.05)  # 50ms — enough for decay_lambda=10 to matter
 
     await store.store(Fact(content="fresh fact", source="fresh"))

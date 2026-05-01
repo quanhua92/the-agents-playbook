@@ -5,19 +5,19 @@ import time
 
 import pytest
 
-from the_agents_playbook.memory.decay import MemoryDecay, PRUNE_THRESHOLD
+from the_agents_playbook.memory.decay import MemoryDecay
 from the_agents_playbook.memory.record import MemoryLifecycle, MemoryRecord
 from the_agents_playbook.memory.segments import (
     MemorySegment,
     MemoryTier,
     SEGMENT_DEFAULTS,
-    SegmentConfig,
 )
 
 
 # ---------------------------------------------------------------------------
 # Segment defaults
 # ---------------------------------------------------------------------------
+
 
 class TestSegmentDefaults:
     def test_all_segments_have_defaults(self):
@@ -46,10 +46,14 @@ class TestSegmentDefaults:
 
     def test_all_nine_segments_exist(self):
         expected = {
-            MemorySegment.IDENTITY, MemorySegment.EXPERTISE,
-            MemorySegment.PREFERENCE, MemorySegment.RELATIONSHIP,
-            MemorySegment.GOAL, MemorySegment.FEEDBACK,
-            MemorySegment.PROJECT, MemorySegment.KNOWLEDGE,
+            MemorySegment.IDENTITY,
+            MemorySegment.EXPERTISE,
+            MemorySegment.PREFERENCE,
+            MemorySegment.RELATIONSHIP,
+            MemorySegment.GOAL,
+            MemorySegment.FEEDBACK,
+            MemorySegment.PROJECT,
+            MemorySegment.KNOWLEDGE,
             MemorySegment.CONTEXT,
         }
         assert set(MemorySegment) == expected
@@ -75,6 +79,7 @@ class TestSegmentDefaults:
 # MemoryRecord
 # ---------------------------------------------------------------------------
 
+
 class TestMemoryRecord:
     def test_default_segment_is_context(self):
         record = MemoryRecord(content="test", source="user")
@@ -82,7 +87,8 @@ class TestMemoryRecord:
 
     def test_inherits_defaults_from_segment(self):
         record = MemoryRecord(
-            content="Alice", source="user",
+            content="Alice",
+            source="user",
             segment=MemorySegment.IDENTITY,
         )
         assert record.tier == MemoryTier.PERMANENT
@@ -91,7 +97,8 @@ class TestMemoryRecord:
 
     def test_explicit_overrides_take_precedence(self):
         record = MemoryRecord(
-            content="test", source="user",
+            content="test",
+            source="user",
             segment=MemorySegment.CONTEXT,
             importance=0.99,
         )
@@ -101,7 +108,8 @@ class TestMemoryRecord:
 
     def test_is_permanent(self):
         record = MemoryRecord(
-            content="test", source="user",
+            content="test",
+            source="user",
             segment=MemorySegment.IDENTITY,
         )
         assert record.is_permanent
@@ -123,15 +131,16 @@ class TestMemoryRecord:
         assert record.lifecycle == MemoryLifecycle.ACTIVE
 
 
-
 # ---------------------------------------------------------------------------
 # MemoryDecay scoring
 # ---------------------------------------------------------------------------
 
+
 class TestMemoryDecayScore:
     def test_permanent_record_never_decays(self):
         record = MemoryRecord(
-            content="name", source="user",
+            content="name",
+            source="user",
             segment=MemorySegment.IDENTITY,
         )
         decay = MemoryDecay()
@@ -141,7 +150,8 @@ class TestMemoryDecayScore:
 
     def test_context_decays_rapidly(self):
         record = MemoryRecord(
-            content="at coffee shop", source="user",
+            content="at coffee shop",
+            source="user",
             segment=MemorySegment.CONTEXT,
         )
         decay = MemoryDecay()
@@ -151,7 +161,8 @@ class TestMemoryDecayScore:
 
     def test_access_boost_increases_score(self):
         record = MemoryRecord(
-            content="JWT tokens", source="tool",
+            content="JWT tokens",
+            source="tool",
             segment=MemorySegment.KNOWLEDGE,
         )
         decay = MemoryDecay()
@@ -167,7 +178,8 @@ class TestMemoryDecayScore:
     def test_score_formula_components(self):
         """Verify score = importance * exp(-lambda * days) * access_boost."""
         record = MemoryRecord(
-            content="test", source="user",
+            content="test",
+            source="user",
             segment=MemorySegment.PROJECT,
         )
         decay = MemoryDecay()
@@ -185,10 +197,12 @@ class TestMemoryDecayScore:
 # MemoryDecay pruning
 # ---------------------------------------------------------------------------
 
+
 class TestMemoryDecayPrune:
     def test_permanent_records_never_pruned(self):
         record = MemoryRecord(
-            content="name", source="user",
+            content="name",
+            source="user",
             segment=MemorySegment.IDENTITY,
         )
         # Backdate far enough that it would normally be pruned
@@ -200,7 +214,8 @@ class TestMemoryDecayPrune:
 
     def test_stale_context_gets_pruned(self):
         record = MemoryRecord(
-            content="at coffee shop", source="user",
+            content="at coffee shop",
+            source="user",
             segment=MemorySegment.CONTEXT,
         )
         record.timestamp = time.monotonic() - 365 * 86400  # 1 year old
@@ -211,7 +226,8 @@ class TestMemoryDecayPrune:
 
     def test_archived_records_not_considered(self):
         record = MemoryRecord(
-            content="old project", source="user",
+            content="old project",
+            source="user",
             segment=MemorySegment.PROJECT,
         )
         record.lifecycle = MemoryLifecycle.ARCHIVED
@@ -222,7 +238,8 @@ class TestMemoryDecayPrune:
 
     def test_fresh_records_not_pruned(self):
         record = MemoryRecord(
-            content="at coffee shop", source="user",
+            content="at coffee shop",
+            source="user",
             segment=MemorySegment.CONTEXT,
         )
         # Just created — score should be well above threshold
@@ -235,10 +252,12 @@ class TestMemoryDecayPrune:
 # MemoryDecay decay_and_archive
 # ---------------------------------------------------------------------------
 
+
 class TestMemoryDecayArchive:
     def test_old_records_get_archived(self):
         record = MemoryRecord(
-            content="old context", source="user",
+            content="old context",
+            source="user",
             segment=MemorySegment.CONTEXT,
         )
         record.timestamp = time.monotonic() - 365 * 86400
@@ -249,7 +268,8 @@ class TestMemoryDecayArchive:
 
     def test_permanent_records_never_archived(self):
         record = MemoryRecord(
-            content="name", source="user",
+            content="name",
+            source="user",
             segment=MemorySegment.IDENTITY,
         )
         record.timestamp = time.monotonic() - 36500 * 86400
@@ -262,6 +282,7 @@ class TestMemoryDecayArchive:
 # ---------------------------------------------------------------------------
 # BaseMemoryProvider segment extensions
 # ---------------------------------------------------------------------------
+
 
 class TestBaseMemoryProviderExtensions:
     def test_store_record_default_fallback(self):
@@ -281,9 +302,11 @@ class TestBaseMemoryProviderExtensions:
                 pass
 
         import asyncio
+
         memory = FakeMemory()
         record = MemoryRecord(
-            content="test fact", source="user",
+            content="test fact",
+            source="user",
             segment=MemorySegment.PREFERENCE,
         )
 
@@ -297,12 +320,15 @@ class TestBaseMemoryProviderExtensions:
         class FakeMemory(BaseMemoryProvider):
             async def store(self, fact: Fact) -> None:
                 pass
+
             async def recall(self, query: str, top_k: int = 5) -> list[Fact]:
                 return []
+
             async def consolidate(self) -> None:
                 pass
 
         import asyncio
+
         memory = FakeMemory()
         results = asyncio.run(memory.recall_by_segment(MemorySegment.IDENTITY))
         assert results == []
@@ -313,12 +339,15 @@ class TestBaseMemoryProviderExtensions:
         class FakeMemory(BaseMemoryProvider):
             async def store(self, fact: Fact) -> None:
                 pass
+
             async def recall(self, query: str, top_k: int = 5) -> list[Fact]:
                 return []
+
             async def consolidate(self) -> None:
                 pass
 
         import asyncio
+
         memory = FakeMemory()
         # Should not raise
         asyncio.run(memory.archive("some-id"))
@@ -329,12 +358,15 @@ class TestBaseMemoryProviderExtensions:
         class FakeMemory(BaseMemoryProvider):
             async def store(self, fact: Fact) -> None:
                 pass
+
             async def recall(self, query: str, top_k: int = 5) -> list[Fact]:
                 return []
+
             async def consolidate(self) -> None:
                 pass
 
         import asyncio
+
         memory = FakeMemory()
         results = asyncio.run(
             memory.recall_by_tag(MemorySegment.PROJECT, "auth-migration")
@@ -347,12 +379,15 @@ class TestBaseMemoryProviderExtensions:
         class FakeMemory(BaseMemoryProvider):
             async def store(self, fact: Fact) -> None:
                 pass
+
             async def recall(self, query: str, top_k: int = 5) -> list[Fact]:
                 return []
+
             async def consolidate(self) -> None:
                 pass
 
         import asyncio
+
         memory = FakeMemory()
         results = asyncio.run(
             memory.archive_by_scope(MemorySegment.PROJECT, "auth-migration")

@@ -50,7 +50,11 @@ def main():
             for tc in response.tool_calls:
                 print(f"  -> Tool: {tc['name']}({tc['args']})")
                 # Execute the tool
-                result = get_weather.invoke(tc['args']) if tc['name'] == 'get_weather' else get_population.invoke(tc['args'])
+                result = (
+                    get_weather.invoke(tc["args"])
+                    if tc["name"] == "get_weather"
+                    else get_population.invoke(tc["args"])
+                )
                 print(f"     Result: {result}")
         else:
             print(f"  -> Direct: {response.content[:80]}...")

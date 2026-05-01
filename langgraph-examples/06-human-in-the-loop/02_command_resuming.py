@@ -20,36 +20,50 @@ In LangGraph, human-in-the-loop happens MID-EXECUTION:
 from typing import Annotated, Literal
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.types import Command, interrupt
+from typing_extensions import TypedDict
 
 
-class State(dict):
+class State(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     decision: str
 
 
 def gate(state: State) -> dict:
     """Ask user which approach to take."""
-    response = interrupt({
-        "question": "Which approach do you want?",
-        "options": {
-            "a": "aggressive (fast, risky)",
-            "b": "conservative (slow, safe)",
-        },
-    })
+    response = interrupt(
+        {
+            "question": "Which approach do you want?",
+            "options": {
+                "a": "aggressive (fast, risky)",
+                "b": "conservative (slow, safe)",
+            },
+        }
+    )
     decision = response.get("choice", "a")
     return {"decision": decision}
 
 
 def aggressive(state: State) -> dict:
-    return {"messages": [AIMessage(content="Taking aggressive approach: moving fast, accepting risk.")]}
+    return {
+        "messages": [
+            AIMessage(
+                content="Taking aggressive approach: moving fast, accepting risk."
+            )
+        ]
+    }
 
 
 def conservative(state: State) -> dict:
-    return {"messages": [AIMessage(content="Taking conservative approach: careful, step-by-step.")]}
+    return {
+        "messages": [
+            AIMessage(content="Taking conservative approach: careful, step-by-step.")
+        ]
+    }
 
 
 def route_by_decision(state: State) -> Literal["aggressive", "conservative"]:
@@ -63,7 +77,9 @@ def main():
     graph.add_node("conservative", conservative)
 
     graph.add_edge(START, "gate")
-    graph.add_conditional_edges("gate", route_by_decision, ["aggressive", "conservative"])
+    graph.add_conditional_edges(
+        "gate", route_by_decision, ["aggressive", "conservative"]
+    )
     graph.add_edge("aggressive", END)
     graph.add_edge("conservative", END)
 
@@ -72,7 +88,7 @@ def main():
 
     # --- Scenario 1: Choose conservative ---
     print("=== Scenario 1: Choose Conservative ===\n")
-    config1 = {"configurable": {"thread_id": "conservative-path"}}
+    config1: RunnableConfig = {"configurable": {"thread_id": "conservative-path"}}
 
     result = app.invoke(
         {"messages": [HumanMessage(content="Fix the bug in auth.py")], "decision": ""},
@@ -89,7 +105,7 @@ def main():
 
     # --- Scenario 2: Choose aggressive ---
     print("\n=== Scenario 2: Choose Aggressive ===\n")
-    config2 = {"configurable": {"thread_id": "aggressive-path"}}
+    config2: RunnableConfig = {"configurable": {"thread_id": "aggressive-path"}}
 
     result = app.invoke(
         {"messages": [HumanMessage(content="Fix the bug in auth.py")], "decision": ""},

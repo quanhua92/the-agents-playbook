@@ -19,8 +19,6 @@ from langgraph.graph.message import add_messages
 from langgraph.types import Send
 from typing_extensions import TypedDict
 
-from shared import get_openai_llm
-
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
@@ -52,7 +50,9 @@ def research_worker(state: State) -> dict:
     # In production, this would invoke a real agent with tools
     return {
         "messages": [
-            HumanMessage(content=f"[Worker] Processed: {last_msg[:60]}...\nResult: Key findings gathered.")
+            HumanMessage(
+                content=f"[Worker] Processed: {last_msg[:60]}...\nResult: Key findings gathered."
+            )
         ],
     }
 
@@ -95,7 +95,7 @@ def main():
     print(f"Task: {task}\n")
     print("Supervisor fans out to 2 parallel workers:\n")
 
-    result = graph.invoke({"messages": [HumanMessage(content=task)]})
+    result = graph.invoke({"messages": [HumanMessage(content=task)], "subtasks": []})
 
     print("Execution trace:")
     for msg in result["messages"]:

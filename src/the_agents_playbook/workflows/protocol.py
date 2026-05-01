@@ -11,6 +11,7 @@ from typing import Any, Literal
 
 # Forward reference for WorkflowState
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from .state import WorkflowState
 

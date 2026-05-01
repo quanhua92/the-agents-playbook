@@ -1,11 +1,6 @@
 """Tests for guardrails.ask_user — AskUserQuestion tool."""
 
-from unittest.mock import AsyncMock
-
-import pytest
-
 from the_agents_playbook.guardrails.ask_user import AskUserQuestion
-from the_agents_playbook.guardrails.permissions import RiskLevel
 from the_agents_playbook.guardrails.prompter import DenyAllPrompter, SilentPrompter
 
 
@@ -13,7 +8,10 @@ class TestAskUserQuestion:
     def test_tool_protocol(self):
         tool = AskUserQuestion()
         assert tool.name == "ask_user"
-        assert "question" in tool.description.lower() or "clarification" in tool.description.lower()
+        assert (
+            "question" in tool.description.lower()
+            or "clarification" in tool.description.lower()
+        )
         assert "question" in tool.parameters["required"]
 
     def test_parameters_schema(self):

@@ -226,7 +226,9 @@ class TestOutputMessage:
         assert out.reasoning == "thinking..."
 
     def test_with_tool_calls(self):
-        out = OutputMessage(tool_calls=[{"id": "call_1", "function": {"name": "get_weather"}}])
+        out = OutputMessage(
+            tool_calls=[{"id": "call_1", "function": {"name": "get_weather"}}]
+        )
         assert len(out.tool_calls) == 1
 
 

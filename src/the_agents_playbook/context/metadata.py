@@ -63,7 +63,7 @@ async def inject_git_status(repo_root: Path | str | None = None) -> ContextLayer
             return _no_git_layer()
         git_root = Path(stdout.decode().strip())
 
-    except (FileNotFoundError, asyncio.TimeoutError, OSError):
+    except FileNotFoundError, asyncio.TimeoutError, OSError:
         return _no_git_layer()
 
     lines: list[str] = [f"Git repository: {git_root}"]
@@ -83,7 +83,7 @@ async def inject_git_status(repo_root: Path | str | None = None) -> ContextLayer
         if proc.returncode == 0:
             branch = stdout.decode().strip()
             lines.append(f"Current branch: {branch}")
-    except (FileNotFoundError, asyncio.TimeoutError, OSError):
+    except FileNotFoundError, asyncio.TimeoutError, OSError:
         pass
 
     # Recent commits
@@ -102,7 +102,7 @@ async def inject_git_status(repo_root: Path | str | None = None) -> ContextLayer
             lines.append("Recent commits:")
             for line in stdout.decode().strip().split("\n"):
                 lines.append(f"  {line}")
-    except (FileNotFoundError, asyncio.TimeoutError, OSError):
+    except FileNotFoundError, asyncio.TimeoutError, OSError:
         pass
 
     # Working tree status
@@ -125,7 +125,7 @@ async def inject_git_status(repo_root: Path | str | None = None) -> ContextLayer
                     lines.append(f"  {line}")
             else:
                 lines.append("Working tree: clean")
-    except (FileNotFoundError, asyncio.TimeoutError, OSError):
+    except FileNotFoundError, asyncio.TimeoutError, OSError:
         pass
 
     return ContextLayer(

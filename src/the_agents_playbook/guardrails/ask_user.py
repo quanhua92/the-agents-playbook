@@ -57,7 +57,9 @@ class AskUserQuestion(Tool):
     def __init__(self, prompter: Prompter | None = None) -> None:
         self._prompter = prompter or SilentPrompter()
 
-    async def execute(self, question: str, options: list[str] | None = None, **kwargs: Any) -> ToolResult:
+    async def execute(
+        self, question: str, options: list[str] | None = None, **kwargs: Any
+    ) -> ToolResult:
         """Ask the user a question and return their response.
 
         Args:
@@ -73,6 +75,7 @@ class AskUserQuestion(Tool):
             prompt = question
 
         from .permissions import RiskLevel
+
         approved = await self._prompter.confirm(prompt, risk=RiskLevel.READ_ONLY)
 
         if not approved:
@@ -80,6 +83,8 @@ class AskUserQuestion(Tool):
 
         if options:
             # For options, the user selected one (simplified — real impl would show menu)
-            return ToolResult(output=f"User selected from options: {', '.join(options)}")
+            return ToolResult(
+                output=f"User selected from options: {', '.join(options)}"
+            )
         else:
             return ToolResult(output=f"User was asked: {question}")

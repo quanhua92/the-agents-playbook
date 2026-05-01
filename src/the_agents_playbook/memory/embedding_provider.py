@@ -1,7 +1,6 @@
 """Concrete embedding provider using the OpenAI embeddings API."""
 
 import logging
-from typing import Any
 
 import httpx
 import numpy as np

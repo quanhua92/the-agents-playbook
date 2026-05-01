@@ -43,7 +43,10 @@ def main():
     policies = [
         ("Strict", {RiskLevel.READ_ONLY}),
         ("Moderate", {RiskLevel.READ_ONLY, RiskLevel.WORKSPACE_WRITE}),
-        ("Permissive", {RiskLevel.READ_ONLY, RiskLevel.WORKSPACE_WRITE, RiskLevel.DANGER}),
+        (
+            "Permissive",
+            {RiskLevel.READ_ONLY, RiskLevel.WORKSPACE_WRITE, RiskLevel.DANGER},
+        ),
     ]
 
     for policy_name, auto_set in policies:

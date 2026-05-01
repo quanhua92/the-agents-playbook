@@ -5,38 +5,62 @@ WORKSPACE_WRITE tools prompt the user, and DANGER tools require
 explicit confirmation.
 """
 
-from the_agents_playbook.guardrails import PermissionMiddleware, RiskLevel, RiskAnnotatedTool
+from the_agents_playbook.guardrails import PermissionMiddleware, RiskLevel
 from the_agents_playbook.tools import Tool, ToolResult
 
 
 class ReadFileTool(Tool):
     @property
-    def name(self) -> str: return "read_file"
+    def name(self) -> str:
+        return "read_file"
+
     @property
-    def description(self) -> str: return "Read a file."
+    def description(self) -> str:
+        return "Read a file."
+
     @property
-    def parameters(self) -> dict: return {"type": "object", "properties": {"path": {"type": "string"}}}
-    async def execute(self, **kw) -> ToolResult: return ToolResult(output="file contents")
+    def parameters(self) -> dict:
+        return {"type": "object", "properties": {"path": {"type": "string"}}}
+
+    async def execute(self, **kw) -> ToolResult:
+        return ToolResult(output="file contents")
 
 
 class WriteFileTool(Tool):
     @property
-    def name(self) -> str: return "write_file"
+    def name(self) -> str:
+        return "write_file"
+
     @property
-    def description(self) -> str: return "Write a file."
+    def description(self) -> str:
+        return "Write a file."
+
     @property
-    def parameters(self) -> dict: return {"type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}}}
-    async def execute(self, **kw) -> ToolResult: return ToolResult(output="written")
+    def parameters(self) -> dict:
+        return {
+            "type": "object",
+            "properties": {"path": {"type": "string"}, "content": {"type": "string"}},
+        }
+
+    async def execute(self, **kw) -> ToolResult:
+        return ToolResult(output="written")
 
 
 class DeleteTool(Tool):
     @property
-    def name(self) -> str: return "delete"
+    def name(self) -> str:
+        return "delete"
+
     @property
-    def description(self) -> str: return "Delete a file."
+    def description(self) -> str:
+        return "Delete a file."
+
     @property
-    def parameters(self) -> dict: return {"type": "object", "properties": {"path": {"type": "string"}}}
-    async def execute(self, **kw) -> ToolResult: return ToolResult(output="deleted")
+    def parameters(self) -> dict:
+        return {"type": "object", "properties": {"path": {"type": "string"}}}
+
+    async def execute(self, **kw) -> ToolResult:
+        return ToolResult(output="deleted")
 
 
 def main():

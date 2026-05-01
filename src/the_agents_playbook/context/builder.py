@@ -111,12 +111,14 @@ class ContextBuilder:
         breakdown = []
         for layer in sorted_layers:
             tokens = len(layer.content) // _CHARS_PER_TOKEN
-            breakdown.append({
-                "name": layer.name,
-                "priority": layer.priority.name,
-                "tokens": tokens,
-                "characters": len(layer.content),
-            })
+            breakdown.append(
+                {
+                    "name": layer.name,
+                    "priority": layer.priority.name,
+                    "tokens": tokens,
+                    "characters": len(layer.content),
+                }
+            )
 
         return {
             "total_tokens": total_tokens,

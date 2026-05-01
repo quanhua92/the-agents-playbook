@@ -45,7 +45,7 @@ async def main():
 
     # Custom repo root
     repo_layer = await inject_git_status(repo_root=Path(__file__).parent.parent)
-    print(f"=== Git Status (repo root) ===")
+    print("=== Git Status (repo root) ===")
     print(repo_layer.content)
 
 

@@ -18,7 +18,9 @@ class Prompter(ABC):
     """
 
     @abstractmethod
-    async def confirm(self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE) -> bool:
+    async def confirm(
+        self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE
+    ) -> bool:
         """Ask the user to confirm an action.
 
         Args:
@@ -41,7 +43,9 @@ class TerminalPrompter(Prompter):
     def __init__(self, input_fn=None) -> None:
         self._input_fn = input_fn
 
-    async def confirm(self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE) -> bool:
+    async def confirm(
+        self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE
+    ) -> bool:
         risk_label = risk.value.upper()
         prompt = f"[{risk_label}] {message} (y/n): "
 
@@ -56,12 +60,16 @@ class TerminalPrompter(Prompter):
 class SilentPrompter(Prompter):
     """Auto-approves everything. Used in tests and headless mode."""
 
-    async def confirm(self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE) -> bool:
+    async def confirm(
+        self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE
+    ) -> bool:
         return True
 
 
 class DenyAllPrompter(Prompter):
     """Auto-denies everything. Useful for testing refusal behavior."""
 
-    async def confirm(self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE) -> bool:
+    async def confirm(
+        self, message: str, risk: RiskLevel = RiskLevel.WORKSPACE_WRITE
+    ) -> bool:
         return False

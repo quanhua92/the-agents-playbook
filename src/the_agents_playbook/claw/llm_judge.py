@@ -86,8 +86,7 @@ class LLMJudge:
             return self._mock_judge(task, result, criteria)
 
         criteria_text = "\n".join(
-            f"- {name}: {desc} (score 0.0-1.0)"
-            for name, desc in criteria.items()
+            f"- {name}: {desc} (score 0.0-1.0)" for name, desc in criteria.items()
         )
 
         system_prompt = (
@@ -174,10 +173,10 @@ class LLMJudge:
                 parsed = json.loads(json_str.strip())
             else:
                 parsed = json.loads(raw)
-        except (json.JSONDecodeError, IndexError):
+        except json.JSONDecodeError, IndexError:
             logger.warning("Could not parse judge response as JSON: %s", raw[:200])
             return JudgeResult(
-                reasoning=f"Failed to parse judge response",
+                reasoning="Failed to parse judge response",
                 raw_response=raw,
             )
 

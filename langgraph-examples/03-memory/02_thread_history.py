@@ -7,8 +7,10 @@ conversation context backed by the checkpointer.
 This example shows multiple users/threads managed simultaneously.
 """
 
+from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from shared import get_openai_llm
 
@@ -16,7 +18,7 @@ from shared import get_openai_llm
 def main():
     llm = get_openai_llm()
     checkpointer = MemorySaver()
-    agent = create_react_agent(llm, [], checkpointer=checkpointer)
+    agent = create_agent(llm, [], checkpointer=checkpointer)
 
     threads = {
         "alice": [
@@ -31,11 +33,11 @@ def main():
 
     for thread_id, messages in threads.items():
         print(f"=== Thread: {thread_id} ===")
-        config = {"configurable": {"thread_id": thread_id}}
+        config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
 
         for msg in messages:
             result = agent.invoke(
-                {"messages": [("user", msg)]},
+                {"messages": [HumanMessage(content=msg)]},
                 config,
             )
             print(f"  Q: {msg}")
@@ -45,9 +47,9 @@ def main():
 
     # Cross-thread isolation check
     print("=== Cross-Thread Isolation ===")
-    config_alice = {"configurable": {"thread_id": "alice"}}
+    config_alice: RunnableConfig = {"configurable": {"thread_id": "alice"}}
     result = agent.invoke(
-        {"messages": [("user", "Do you know anyone named Bob?")]},
+        {"messages": [HumanMessage(content="Do you know anyone named Bob?")]},
         config_alice,
     )
     print(f"  Alice's thread: {result['messages'][-1].content[:120]}...")

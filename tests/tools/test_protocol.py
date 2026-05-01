@@ -43,12 +43,14 @@ def test_tool_result_error():
 def test_tool_result_is_dataclass():
     """ToolResult should be a dataclass for easy serialization."""
     import dataclasses
+
     assert dataclasses.is_dataclass(ToolResult)
 
 
 def test_tool_protocol_requires_subclass():
     """Cannot instantiate Tool directly — must subclass."""
     import pytest
+
     with pytest.raises(TypeError):
         Tool()
 

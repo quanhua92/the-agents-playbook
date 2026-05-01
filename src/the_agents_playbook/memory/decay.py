@@ -47,7 +47,11 @@ class MemoryDecay:
             A relevance score between 0.0 and ~1.1 (slightly above 1.0
             for frequently-accessed permanent memories due to access boost).
         """
-        if record.tier is None or record.importance is None or record.decay_rate is None:
+        if (
+            record.tier is None
+            or record.importance is None
+            or record.decay_rate is None
+        ):
             return 0.0
 
         # Exponential decay: exp(-lambda * days)

@@ -1,7 +1,5 @@
 """Tests for draft-before-act safety pattern."""
 
-import pytest
-
 from the_agents_playbook.guardrails.drafts import (
     ApprovalTool,
     Draft,
@@ -43,9 +41,9 @@ class TestDraftStore:
 
     def test_list_pending(self):
         store = DraftStore()
-        d1 = store.save(Draft(summary="pending 1"))
-        d2 = store.save(Draft(summary="pending 2"))
-        d3 = store.save(Draft(summary="also pending"))
+        store.save(Draft(summary="pending 1"))
+        store.save(Draft(summary="pending 2"))
+        store.save(Draft(summary="also pending"))
 
         pending = store.list_pending()
         assert len(pending) == 3
@@ -101,10 +99,12 @@ class TestDraftStore:
 
     def test_expire_stale(self):
         store = DraftStore()
-        draft = store.save(Draft(
-            summary="expires fast",
-            expires_after_seconds=0.0,
-        ))
+        draft = store.save(
+            Draft(
+                summary="expires fast",
+                expires_after_seconds=0.0,
+            )
+        )
         expired = store.expire_stale()
         assert len(expired) == 1
         assert draft.status == DraftStatus.EXPIRED

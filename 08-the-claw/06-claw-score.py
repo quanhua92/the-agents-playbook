@@ -19,7 +19,7 @@ def main():
 
         (tmp / "good.py").write_text(
             "def add(a: int, b: int) -> int:\n"
-            "    \"\"\"Add two numbers.\"\"\"\n"
+            '    """Add two numbers."""\n'
             "    return a + b\n"
         )
 
@@ -48,7 +48,9 @@ def main():
         for name in ["good", "medium", "bad"]:
             report = reviewer.review_file(Path(f"{name}.py"))
             bar = "#" * int(report.score() * 10) + "." * (10 - int(report.score() * 10))
-            print(f"  {name:8s} [{bar}] {report.score():.1f}/1.0  ({len(report.findings)} findings)")
+            print(
+                f"  {name:8s} [{bar}] {report.score():.1f}/1.0  ({len(report.findings)} findings)"
+            )
         print()
 
         # --- Full directory review ---

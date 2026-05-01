@@ -1,10 +1,6 @@
 """Tests for tools/builtins/search.py — WebSearchTool."""
 
-import json
-from unittest.mock import AsyncMock, patch
-
 import httpx
-import pytest
 import respx
 
 from the_agents_playbook.tools.builtins.search import WebSearchTool
@@ -69,15 +65,13 @@ async def test_search_max_results():
     assert result.error is False
     # Should contain at most 3 results (plus the "Related Topics:" header)
     lines = result.output.split("\n")
-    result_lines = [l for l in lines if l.strip().startswith("- ")]
+    result_lines = [ln for ln in lines if ln.strip().startswith("- ")]
     assert len(result_lines) <= 3
 
 
 @respx.mock
 async def test_search_timeout():
-    respx.get("https://api.duckduckgo.com").mock(
-        side_effect=httpx.Response(408)
-    )
+    respx.get("https://api.duckduckgo.com").mock(side_effect=httpx.Response(408))
 
     tool = WebSearchTool(timeout_seconds=0.001)
     result = await tool.execute(query="test")

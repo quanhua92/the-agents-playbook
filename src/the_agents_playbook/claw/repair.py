@@ -9,7 +9,6 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..tools.protocol import ToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +65,10 @@ class RepairLoop:
                     error_history.append(result.output)
                     logger.warning(
                         "Repair attempt %d/%d: tool %s returned error: %s",
-                        attempt, self._max_retries, tool_name, result.output,
+                        attempt,
+                        self._max_retries,
+                        tool_name,
+                        result.output,
                     )
                     continue
 
@@ -81,7 +83,10 @@ class RepairLoop:
                 error_history.append(error_msg)
                 logger.warning(
                     "Repair attempt %d/%d: tool %s raised: %s",
-                    attempt, self._max_retries, tool_name, error_msg,
+                    attempt,
+                    self._max_retries,
+                    tool_name,
+                    error_msg,
                 )
 
         return RepairResult(

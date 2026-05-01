@@ -52,11 +52,13 @@ class TestLLMJudge:
         judge = LLMJudge()
         criteria = {"accuracy": "Is it correct?", "clarity": "Is it clear?"}
 
-        raw = json.dumps({
-            "scores": {"accuracy": 0.9, "clarity": 0.8},
-            "reasoning": "Both good",
-            "overall": 0.85,
-        })
+        raw = json.dumps(
+            {
+                "scores": {"accuracy": 0.9, "clarity": 0.8},
+                "reasoning": "Both good",
+                "overall": 0.85,
+            }
+        )
 
         result = judge._parse_response(raw, criteria)
 
@@ -93,10 +95,12 @@ class TestLLMJudge:
         judge = LLMJudge()
         criteria = {"a": "first", "b": "second"}
 
-        raw = json.dumps({
-            "scores": {"a": 0.8, "b": 0.6},
-            "reasoning": "decent",
-        })
+        raw = json.dumps(
+            {
+                "scores": {"a": 0.8, "b": 0.6},
+                "reasoning": "decent",
+            }
+        )
 
         result = judge._parse_response(raw, criteria)
         assert result.overall == pytest.approx(0.7)
@@ -105,11 +109,13 @@ class TestLLMJudge:
         judge = LLMJudge()
         criteria = {"a": "first", "b": "second"}
 
-        raw = json.dumps({
-            "scores": {"a": 0.9},  # 'b' missing
-            "reasoning": "partial",
-            "overall": 0.5,
-        })
+        raw = json.dumps(
+            {
+                "scores": {"a": 0.9},  # 'b' missing
+                "reasoning": "partial",
+                "overall": 0.5,
+            }
+        )
 
         result = judge._parse_response(raw, criteria)
         assert result.scores["a"] == 0.9
@@ -120,7 +126,8 @@ class TestLLMJudge:
 class TestAgentEvaluator:
     async def test_deterministic_pass(self):
         from the_agents_playbook.claw.agent_evaluator import (
-            AgentEvaluator, AgentRunResult, EvalConfig,
+            AgentEvaluator,
+            EvalConfig,
         )
 
         # Create a mock agent that yields a text event

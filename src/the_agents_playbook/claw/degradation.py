@@ -6,9 +6,7 @@ can continue operating (in a limited capacity) rather than crashing.
 
 import logging
 from dataclasses import dataclass
-from typing import Any
 
-from ..tools.protocol import ToolResult
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,9 @@ class DegradationManager:
         """Register a specific fallback message for a tool."""
         self._tool_fallbacks[tool_name] = fallback_message
 
-    async def handle_tool_failure(self, tool_name: str, error: Exception) -> FallbackResult:
+    async def handle_tool_failure(
+        self, tool_name: str, error: Exception
+    ) -> FallbackResult:
         """Handle a tool failure with a graceful fallback.
 
         Args:
@@ -54,9 +54,7 @@ class DegradationManager:
         Returns:
             FallbackResult with a user-facing message.
         """
-        fallback_msg = self._tool_fallbacks.get(
-            tool_name, self._default_tool_fallback
-        )
+        fallback_msg = self._tool_fallbacks.get(tool_name, self._default_tool_fallback)
         output = f"Tool '{tool_name}' is unavailable: {error}. {fallback_msg}"
 
         logger.warning("Tool degradation: %s → %s", tool_name, error)

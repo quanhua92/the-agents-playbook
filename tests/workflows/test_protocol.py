@@ -32,7 +32,13 @@ class TestStepResult:
         assert r.error is None
 
     def test_with_data(self):
-        r = StepResult(step_id="s1", success=True, output_data={"key": "val"}, summary="ok", updates={"x": 1})
+        r = StepResult(
+            step_id="s1",
+            success=True,
+            output_data={"key": "val"},
+            summary="ok",
+            updates={"x": 1},
+        )
         assert r.output_data == {"key": "val"}
         assert r.summary == "ok"
         assert r.updates == {"x": 1}
@@ -50,11 +56,15 @@ class TestWorkflowEvent:
         assert e.data["step_id"] == "plan"
 
     def test_step_completed(self):
-        e = WorkflowEvent(type="step_completed", data={"step_id": "plan", "summary": "ok"})
+        e = WorkflowEvent(
+            type="step_completed", data={"step_id": "plan", "summary": "ok"}
+        )
         assert e.type == "step_completed"
 
     def test_workflow_completed(self):
-        e = WorkflowEvent(type="workflow_completed", data={"steps_completed": 2, "steps_failed": 0})
+        e = WorkflowEvent(
+            type="workflow_completed", data={"steps_completed": 2, "steps_failed": 0}
+        )
         assert e.type == "workflow_completed"
 
     def test_workflow_failed(self):

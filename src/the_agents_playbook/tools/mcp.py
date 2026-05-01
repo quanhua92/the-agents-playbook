@@ -114,9 +114,7 @@ class MCPBridge:
 
             if response.get("id") == self._request_id:
                 if "error" in response:
-                    raise MCPConnectionError(
-                        f"MCP error: {response['error']}"
-                    )
+                    raise MCPConnectionError(f"MCP error: {response['error']}")
                 logger.debug("MCP recv: %s", json.dumps(response, indent=2))
                 return response.get("result", {})
 
@@ -143,10 +141,12 @@ class MCPBridge:
         )
 
         # Send initialized notification (no id = notification, no response expected)
-        notification = json.dumps({
-            "jsonrpc": "2.0",
-            "method": "notifications/initialized",
-        })
+        notification = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+            }
+        )
         if self._process.stdin:
             self._process.stdin.write(notification.encode() + b"\n")
             await self._process.stdin.drain()
@@ -157,7 +157,9 @@ class MCPBridge:
             _MCPTool(
                 name=tool.get("name", "unknown"),
                 description=tool.get("description", ""),
-                parameters=tool.get("inputSchema", {"type": "object", "properties": {}}),
+                parameters=tool.get(
+                    "inputSchema", {"type": "object", "properties": {}}
+                ),
                 send_request=self._send_request,
             )
             for tool in result.get("tools", [])

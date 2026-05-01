@@ -69,7 +69,9 @@ class SessionPersistence:
                 try:
                     messages.append(json.loads(line))
                 except json.JSONDecodeError as e:
-                    logger.warning("Skipping malformed line %d in %s: %s", line_num, path, e)
+                    logger.warning(
+                        "Skipping malformed line %d in %s: %s", line_num, path, e
+                    )
 
         logger.info("Loaded %d messages from %s", len(messages), path)
         return messages
@@ -165,7 +167,7 @@ class SessionCompactor:
             return messages
 
         old = messages[: -self._keep_recent]
-        recent = messages[-self._keep_recent:]
+        recent = messages[-self._keep_recent :]
 
         summary_content = self._build_summary(old)
         summary_msg = {

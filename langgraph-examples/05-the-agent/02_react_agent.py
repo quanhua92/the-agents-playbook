@@ -1,4 +1,4 @@
-"""02_react_agent.py -- create_react_agent replaces root's Agent class.
+"""02_react_agent.py -- create_agent (ReAct pattern) replaces root's Agent class.
 
 In the root project (240 lines):
   agent = Agent(
@@ -13,16 +13,18 @@ In the root project (240 lines):
       elif event.type == "text": ...
 
 In LangGraph (one function call):
-  agent = create_react_agent(llm, tools, checkpointer=checkpointer)
-  result = agent.invoke({"messages": [("user", "Fix the bug")]}, config)
+  agent = create_agent(llm, tools, checkpointer=checkpointer)
+  result = agent.invoke({"messages": [HumanMessage(content="Fix the bug")]}, config)
 
 The prebuilt agent internally uses a StateGraph with ToolNode and
 conditional edges -- the same pattern you'd build by hand.
 """
 
+from langchain_core.messages import HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from shared import get_openai_llm
 
@@ -44,21 +46,21 @@ def main():
     checkpointer = MemorySaver()
 
     # This single call replaces the entire Agent class
-    agent = create_react_agent(
+    agent = create_agent(
         llm,
         [add_numbers, multiply_numbers],
         checkpointer=checkpointer,
-        prompt="You have tools for addition and multiplication. Always use them for any calculation -- never compute numbers in your head.",
+        system_prompt="You have tools for addition and multiplication. Always use them for any calculation -- never compute numbers in your head.",
     )
 
-    config = {"configurable": {"thread_id": "math-session"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "math-session"}}
 
     # Task requiring multi-step tool use: large numbers that LLMs can't
     # compute reliably without tools.
     # (3847291034 + 9283746501) * 7
     print("=== Task: What is (3847291034 + 9283746501) * 7? ===\n")
     result = agent.invoke(
-        {"messages": [("user", "What is (3847291034 + 9283746501) * 7?")]},
+        {"messages": [HumanMessage(content="What is (3847291034 + 9283746501) * 7?")]},
         config,
     )
 
@@ -80,14 +82,14 @@ def main():
     # Follow-up turn (uses checkpoint memory)
     print("\n=== Follow-up: What was the first step? ===\n")
     result2 = agent.invoke(
-        {"messages": [("user", "What was the first calculation step?")]},
+        {"messages": [HumanMessage(content="What was the first calculation step?")]},
         config,
     )
     print(f"  [AI] {result2['messages'][-1].content}")
 
     print("\n=== Root Comparison ===")
     print("Root Agent class:     ~240 lines of ReAct loop code")
-    print("create_react_agent:   1 function call")
+    print("create_agent:           1 function call")
     print("Both produce:         multi-step tool use with memory")
 
 

@@ -5,7 +5,7 @@ In the root project:
   # Manually manages sequential tool calls with entropy re-scoring
 
 In LangGraph:
-  agent = create_react_agent(llm, [search, lookup, calculate])
+  agent = create_agent(llm, [search, lookup, calculate])
   result = agent.invoke({"messages": [("user", "...")]})
   # The LLM decides when to chain tools and when to stop
 
@@ -13,8 +13,9 @@ The agent handles multi-step tool use natively. The LLM reasons about
 which tools to call in what order to accomplish the task.
 """
 
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from shared import get_openai_llm
 
@@ -57,7 +58,7 @@ def calculate(expression: str) -> str:
 
 def main():
     llm = get_openai_llm()
-    agent = create_react_agent(llm, [search, lookup_population, calculate])
+    agent = create_agent(llm, [search, lookup_population, calculate])
 
     # Task requiring multiple tool calls chained together
     prompt = (
@@ -67,7 +68,7 @@ def main():
     )
 
     print(f"=== Task ===\n{prompt}\n")
-    result = agent.invoke({"messages": [("user", prompt)]})
+    result = agent.invoke({"messages": [HumanMessage(content=prompt)]})
 
     # Show the tool chain
     print("=== Tool Chain ===")
@@ -80,7 +81,7 @@ def main():
         elif hasattr(msg, "type") and msg.type == "tool":
             print(f"    -> {msg.content}")
 
-    print(f"\n=== Final Answer ===")
+    print("\n=== Final Answer ===")
     print(result["messages"][-1].content)
     print(f"\nTotal tool calls: {tool_call_count}")
 

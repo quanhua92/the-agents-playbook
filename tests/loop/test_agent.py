@@ -1,15 +1,13 @@
 """Tests for loop.agent — Agent ReAct loop."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from the_agents_playbook.loop.agent import Agent
 from the_agents_playbook.loop.config import AgentConfig
-from the_agents_playbook.loop.protocol import AgentEvent, TurnResult
+from the_agents_playbook.loop.protocol import TurnResult
 from the_agents_playbook.providers.types import (
-    InputMessage,
-    MessageRequest,
     MessageResponse,
     OutputMessage,
 )
@@ -29,14 +27,16 @@ def _tool_call_response(tool_name: str, arguments: dict) -> MessageResponse:
         message=OutputMessage(
             role="assistant",
             content=None,
-            tool_calls=[{
-                "id": "call_1",
-                "type": "function",
-                "function": {
-                    "name": tool_name,
-                    "arguments": __import__("json").dumps(arguments),
-                },
-            }],
+            tool_calls=[
+                {
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {
+                        "name": tool_name,
+                        "arguments": __import__("json").dumps(arguments),
+                    },
+                }
+            ],
         ),
         stop_reason="tool_calls",
     )
@@ -134,7 +134,9 @@ class TestAgentRun:
 
         status_events = [e for e in events if e.type == "status"]
         # Should have max_iterations status events + final max-iter notice
-        assert len([e for e in status_events if "max" in e.data.get("message", "")]) == 1
+        assert (
+            len([e for e in status_events if "max" in e.data.get("message", "")]) == 1
+        )
 
     async def test_on_error_raise(self, mock_provider, mock_registry):
         """Agent raises on provider error when on_error='raise'."""

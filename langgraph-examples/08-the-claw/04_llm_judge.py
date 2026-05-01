@@ -11,11 +11,9 @@ Pattern:
   4. Parse structured scores from the judge's response
 """
 
-import asyncio
-
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from shared import get_openai_llm
 
@@ -52,8 +50,7 @@ def judge_with_llm(llm, task: str, response: str, criteria: dict[str, str]) -> d
     Returns a dict with 'scores' and 'reasoning' keys.
     """
     criteria_text = "\n".join(
-        f"- {name}: {desc} (0.0-1.0)"
-        for name, desc in criteria.items()
+        f"- {name}: {desc} (0.0-1.0)" for name, desc in criteria.items()
     )
 
     judge_prompt = (
@@ -65,12 +62,18 @@ def judge_with_llm(llm, task: str, response: str, criteria: dict[str, str]) -> d
     )
 
     from langchain_core.messages import SystemMessage
-    result = llm.invoke([
-        SystemMessage(content="You are an impartial evaluator. Return ONLY valid JSON."),
-        HumanMessage(content=judge_prompt),
-    ])
+
+    result = llm.invoke(
+        [
+            SystemMessage(
+                content="You are an impartial evaluator. Return ONLY valid JSON."
+            ),
+            HumanMessage(content=judge_prompt),
+        ]
+    )
 
     import json
+
     try:
         text = result.content
         if "```" in text:
@@ -78,8 +81,12 @@ def judge_with_llm(llm, task: str, response: str, criteria: dict[str, str]) -> d
             if text.startswith(("json", "JSON")):
                 text = text[4:]
         return json.loads(text.strip())
-    except (json.JSONDecodeError, IndexError):
-        return {"scores": {}, "reasoning": "Failed to parse judge response", "overall": 0.0}
+    except json.JSONDecodeError, IndexError:
+        return {
+            "scores": {},
+            "reasoning": "Failed to parse judge response",
+            "overall": 0.0,
+        }
 
 
 def main():
@@ -88,8 +95,8 @@ def main():
     llm = get_openai_llm()
 
     # Build a ReAct agent with tools
-    agent = create_react_agent(
-        model=llm,
+    agent = create_agent(
+        llm,
         tools=[calculate, lookup_fact],
     )
 
@@ -115,8 +122,6 @@ def main():
             "description": "Multi-step task — both tool use and knowledge",
         },
     ]
-
-    from langchain_core.tools import tool as lc_tool
 
     for task_info in tasks:
         task = task_info["task"]

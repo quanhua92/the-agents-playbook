@@ -41,7 +41,9 @@ class HookSystem:
         if event not in self._handlers:
             self._handlers[event] = []
         self._handlers[event].append(fn)
-        logger.debug("Registered hook %s → %s", event, getattr(fn, "__qualname__", repr(fn)))
+        logger.debug(
+            "Registered hook %s → %s", event, getattr(fn, "__qualname__", repr(fn))
+        )
 
     def off(self, event: str, fn: HookFn | None = None) -> None:
         """Remove a handler (or all handlers) for an event.
@@ -82,7 +84,10 @@ class HookSystem:
             try:
                 await fn(**kwargs)
             except Exception:
-                logger.exception("Hook handler %s raised an error", getattr(fn, "__qualname__", repr(fn)))
+                logger.exception(
+                    "Hook handler %s raised an error",
+                    getattr(fn, "__qualname__", repr(fn)),
+                )
 
     def clear(self) -> None:
         """Remove all registered handlers."""

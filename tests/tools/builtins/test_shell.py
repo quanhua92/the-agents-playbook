@@ -1,6 +1,5 @@
 """Tests for tools/builtins/shell.py — ShellTool."""
 
-import re
 from pathlib import Path
 
 import pytest

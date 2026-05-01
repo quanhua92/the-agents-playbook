@@ -20,9 +20,10 @@ import time
 from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
+from typing_extensions import TypedDict
 
 
-class RetryState(dict):
+class RetryState(TypedDict):
     attempt: int
     max_attempts: int
     success: bool
@@ -36,7 +37,7 @@ def attempt_operation(state: RetryState) -> dict:
 
     if attempt < 2:
         # Exponential backoff (using time.sleep for sync context)
-        delay = min(0.1 * (2 ** attempt), 1.0)
+        delay = min(0.1 * (2**attempt), 1.0)
         time.sleep(delay)
         error_msg = f"Attempt {attempt + 1}: connection refused (waited {delay:.1f}s)"
         print(f"  [ATTEMPT] {error_msg}")
@@ -89,34 +90,40 @@ def main():
 
     print("=== Retry Loop ===\n")
     start = time.monotonic()
-    result = app.invoke({
-        "attempt": 0,
-        "max_attempts": 5,
-        "success": False,
-        "errors": [],
-        "result": "",
-    })
+    result = app.invoke(
+        {
+            "attempt": 0,
+            "max_attempts": 5,
+            "success": False,
+            "errors": [],
+            "result": "",
+        }
+    )
     elapsed = time.monotonic() - start
 
-    print(f"\n=== Result ===")
+    print("\n=== Result ===")
     print(result["result"])
     print(f"\nAttempts: {result['attempt']}")
     print(f"Total time: {elapsed:.2f}s (includes backoff delays)")
 
     print("\n=== Exhaust Retries Scenario ===\n")
     # Lower max so it actually fails
-    result2 = app.invoke({
-        "attempt": 0,
-        "max_attempts": 1,  # Only 1 attempt -> will fail
-        "success": False,
-        "errors": [],
-        "result": "",
-    })
+    result2 = app.invoke(
+        {
+            "attempt": 0,
+            "max_attempts": 1,  # Only 1 attempt -> will fail
+            "success": False,
+            "errors": [],
+            "result": "",
+        }
+    )
     print(f"Result: {result2['result']}")
 
     print("\n=== Root Comparison ===")
     print("Root RepairLoop:     imperative retry wrapper (try/except/for loop)")
-    print("LangGraph:           graph edge loop (attempt -> conditional -> retry/done/fail)")
+    print(
+        "LangGraph:           graph edge loop (attempt -> conditional -> retry/done/fail)"
+    )
     print("Same outcome, different paradigm.")
 
 

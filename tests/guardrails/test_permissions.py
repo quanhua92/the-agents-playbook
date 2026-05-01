@@ -1,7 +1,5 @@
 """Tests for guardrails.permissions — RiskLevel and PermissionMiddleware."""
 
-from unittest.mock import AsyncMock
-
 import pytest
 
 from the_agents_playbook.guardrails.permissions import (

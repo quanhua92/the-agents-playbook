@@ -8,19 +8,21 @@ This example demonstrates the decision boundary between "confident
 enough to act" and "should ask the user."
 """
 
-from the_agents_playbook.loop import AgentConfig, score_tools, shannon_entropy
+from the_agents_playbook.loop import AgentConfig, score_tools
 
 
 def main():
     # --- Define routing thresholds ---
 
-    low_threshold = 0.5    # Very confident — auto-execute
-    mid_threshold = 1.5    # Moderate — execute but monitor
-    high_threshold = 2.0   # Uncertain — ask user
+    low_threshold = 0.5  # Very confident — auto-execute
+    # mid_threshold = 1.5  # Moderate — execute but monitor (reserved for future use)
+    high_threshold = 2.0  # Uncertain — ask user
 
     print("=== Entropy Routing Thresholds ===")
     print(f"  Low:    H < {low_threshold}  → Auto-execute (confident)")
-    print(f"  Mid:    {low_threshold} ≤ H < {high_threshold}  → Execute with monitoring")
+    print(
+        f"  Mid:    {low_threshold} ≤ H < {high_threshold}  → Execute with monitoring"
+    )
     print(f"  High:   H ≥ {high_threshold}  → Ask user for clarification")
     print()
 
@@ -70,8 +72,7 @@ def main():
         route = "EXECUTE" if entropy < threshold else "ASK"
 
         print(
-            f"  Step {step}: threshold={threshold:.1f}, "
-            f"entropy={entropy:.3f} → {route}"
+            f"  Step {step}: threshold={threshold:.1f}, entropy={entropy:.3f} → {route}"
         )
 
     print()

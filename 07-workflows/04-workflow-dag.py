@@ -7,12 +7,13 @@ topological batches, and executes steps in the correct order.
 import asyncio
 
 from the_agents_playbook.workflows.protocol import BaseStep, StepResult
-from the_agents_playbook.workflows.state import WorkflowState
 from the_agents_playbook.workflows.workflow import Workflow
 
 
 class DemoStep(BaseStep):
-    def __init__(self, step_id: str, deps: list[str] | None = None, sleep_time: float = 0):
+    def __init__(
+        self, step_id: str, deps: list[str] | None = None, sleep_time: float = 0
+    ):
         self._id = step_id
         self._deps = deps or []
         self._sleep = sleep_time
@@ -40,11 +41,13 @@ async def main():
     # --- Build a 3-step DAG ---
 
     print("=== DAG: research → plan → implement ===")
-    wf = Workflow(steps=[
-        DemoStep("research"),
-        DemoStep("plan", deps=["research"]),
-        DemoStep("implement", deps=["plan"]),
-    ])
+    wf = Workflow(
+        steps=[
+            DemoStep("research"),
+            DemoStep("plan", deps=["research"]),
+            DemoStep("implement", deps=["plan"]),
+        ]
+    )
 
     errors = wf.validate()
     print(f"  Validation: {'PASS' if not errors else errors}")
@@ -63,7 +66,9 @@ async def main():
         elif event.type == "step_completed":
             print(f"  [DONE]  {event.data['step_id']}: {event.data.get('summary', '')}")
         elif event.type == "workflow_completed":
-            print(f"  [FINISH] completed={event.data['steps_completed']}, failed={event.data['steps_failed']}")
+            print(
+                f"  [FINISH] completed={event.data['steps_completed']}, failed={event.data['steps_failed']}"
+            )
     print()
 
     # --- Validation catches errors ---
@@ -75,11 +80,13 @@ async def main():
     print()
 
     print("=== Validation: Cycle Detected ===")
-    cycle_wf = Workflow(steps=[
-        DemoStep("a", deps=["c"]),
-        DemoStep("b", deps=["a"]),
-        DemoStep("c", deps=["b"]),
-    ])
+    cycle_wf = Workflow(
+        steps=[
+            DemoStep("a", deps=["c"]),
+            DemoStep("b", deps=["a"]),
+            DemoStep("c", deps=["b"]),
+        ]
+    )
     errors = cycle_wf.validate()
     print(f"  Errors: {errors}")
 

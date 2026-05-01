@@ -10,9 +10,8 @@ This is consolidation vs compaction:
 
 import asyncio
 import tempfile
-from pathlib import Path
 
-from the_agents_playbook.memory import DualFileMemory, Fact, LLMConsolidator
+from the_agents_playbook.memory import DualFileMemory, LLMConsolidator
 
 
 async def main():
@@ -24,7 +23,10 @@ async def main():
         events = [
             ("user", "Hey, I'm working on an agent project using Python"),
             ("assistant", "That sounds great! What framework are you using?"),
-            ("user", "No framework — I'm building it from scratch with httpx and pydantic"),
+            (
+                "user",
+                "No framework — I'm building it from scratch with httpx and pydantic",
+            ),
             ("assistant", "Interesting choice. Any specific LLM provider?"),
             ("user", "Using OpenAI-compatible API via OpenRouter"),
             ("user", "Oh and I prefer functional programming patterns over OOP"),

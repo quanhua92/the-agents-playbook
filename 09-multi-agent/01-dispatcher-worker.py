@@ -86,7 +86,9 @@ class ResearcherAgent(BaseAgent):
         )
         yield AgentEvent(
             type="text",
-            data={"text": f"Based on my research: {prompt} — here are the key findings..."},
+            data={
+                "text": f"Based on my research: {prompt} — here are the key findings..."
+            },
             source=self.name,
         )
 
@@ -196,7 +198,7 @@ async def main():
         if agent:
             print(f"  Routed to: {agent.name}")
             print(f"  Available tools: {[t.name for t in agent.tools]}")
-            print(f"  Events:")
+            print("  Events:")
             async for event in agent.run(task):
                 if event.type == "text":
                     print(f"    [text] {event.data.get('text', '')[:60]}")

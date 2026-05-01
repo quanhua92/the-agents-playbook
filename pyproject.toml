@@ -33,3 +33,6 @@ addopts = "--cov=src --cov-report=term-missing -m 'not openai'"
 markers = [
     "openai: integration tests that hit the real API (requires OPENAI_API_KEY in .env)",
 ]
+
+[tool.ruff]
+exclude = [".venv"]

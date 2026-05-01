@@ -93,7 +93,7 @@ async def main():
     if pending:
         api_draft = pending[0]
         print(f"--- Reviewing: {api_draft.summary} ---")
-        print(f"  Dispatcher: Rejecting (needs security review first)\n")
+        print("  Dispatcher: Rejecting (needs security review first)\n")
 
         result = await approval_tool.execute(
             action="reject",
@@ -111,20 +111,24 @@ async def main():
             DraftStatus.PENDING: "?",
             DraftStatus.EXPIRED: "!",
         }.get(draft.status, "?")
-        print(f"  [{status_icon}] {draft.draft_id}  "
-              f"{draft.kind.value:12s}  "
-              f"{draft.status.value:10s}  "
-              f"{draft.summary[:40]}")
+        print(
+            f"  [{status_icon}] {draft.draft_id}  "
+            f"{draft.kind.value:12s}  "
+            f"{draft.status.value:10s}  "
+            f"{draft.summary[:40]}"
+        )
 
     # --- Expiration demo ---
     print("\n=== Expiration Demo ===\n")
 
     # Create a draft with very short expiration
-    short_draft = store.save(Draft(
-        kind=DraftKind.MESSAGE,
-        summary="Quick notification (expires in 0s for demo)",
-        expires_after_seconds=0.0,
-    ))
+    short_draft = store.save(
+        Draft(
+            kind=DraftKind.MESSAGE,
+            summary="Quick notification (expires in 0s for demo)",
+            expires_after_seconds=0.0,
+        )
+    )
     print(f"Created short-lived draft: {short_draft.draft_id}")
 
     expired = store.expire_stale()

@@ -38,10 +38,14 @@ async def main():
 
     print("=== TerminalPrompter (mocked) ===")
     terminal = TerminalPrompter(input_fn=AsyncMock(side_effect=["y", "n", "Y", "nope"]))
-    for i, (answer, expected) in enumerate([("y", True), ("n", False), ("Y", True), ("nope", False)]):
-        result = await terminal.confirm(f"Question {i+1}?")
+    for i, (answer, expected) in enumerate(
+        [("y", True), ("n", False), ("Y", True), ("nope", False)]
+    ):
+        result = await terminal.confirm(f"Question {i + 1}?")
         status = "approved" if result else "denied"
-        print(f"  Answer '{answer:5s}' → {status} (expected: {'approved' if expected else 'denied'})")
+        print(
+            f"  Answer '{answer:5s}' → {status} (expected: {'approved' if expected else 'denied'})"
+        )
     print()
 
     # --- Risk labels in prompts ---

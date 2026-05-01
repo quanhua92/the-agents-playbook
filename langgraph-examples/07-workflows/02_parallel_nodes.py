@@ -24,9 +24,10 @@ from typing import Annotated
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
+from typing_extensions import TypedDict
 
 
-class ParallelState(dict):
+class ParallelState(TypedDict):
     items: list[str]
     results: Annotated[list[str], add]
 
@@ -50,7 +51,7 @@ def process(state: dict) -> dict:
 
 def main():
     graph = StateGraph(ParallelState)
-    graph.add_node("process", process)
+    graph.add_node("process", process)  # type: ignore[arg-type]
 
     # Fan-out from START: each item gets its own parallel invocation
     graph.add_conditional_edges(START, route_to_items, ["process"])
@@ -65,11 +66,11 @@ def main():
     result = app.invoke({"items": items, "results": []})
     elapsed = time.monotonic() - start
 
-    print(f"\n=== Results ===")
+    print("\n=== Results ===")
     for r in result["results"]:
         print(f"  {r}")
 
-    print(f"\n=== Performance ===")
+    print("\n=== Performance ===")
     print(f"Items:         {len(items)}")
     print(f"Parallel time: {elapsed:.2f}s")
     print(f"Sequential:    {len(items) * 0.2:.2f}s")

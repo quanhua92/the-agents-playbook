@@ -17,14 +17,16 @@ async def main():
     print("=== Streaming ===\n")
     full_text: list[str] = []
 
-    async for chunk in llm.astream([
-        HumanMessage(content="Explain LangGraph in two sentences."),
-    ]):
-        if chunk.content:
+    async for chunk in llm.astream(
+        [
+            HumanMessage(content="Explain LangGraph in two sentences."),
+        ]
+    ):
+        if isinstance(chunk.content, str):
             print(chunk.content, end="", flush=True)
             full_text.append(chunk.content)
 
-    print(f"\n\n=== Summary ===")
+    print("\n\n=== Summary ===")
     print(f"Total chunks received: {len(full_text)}")
     print(f"Full response: {''.join(full_text)}")
 
@@ -45,17 +47,20 @@ async def main():
 
     async for chunk in llm_with_tools.astream("What is 15 * 27?"):
         # Tool calls appear as chunks too
-        if chunk.content:
+        if isinstance(chunk.content, str):
             print(chunk.content, end="", flush=True)
             full_text2.append(chunk.content)
-        if chunk.tool_call_chunks:
-            for tc in chunk.tool_call_chunks:
+        tool_chunks = getattr(chunk, "tool_call_chunks", None)
+        if tool_chunks:
+            for tc in tool_chunks:
                 if tc.get("name"):
                     print(f"\n[Tool call: {tc['name']}]", end="")
                 if tc.get("args"):
                     print(f" args={tc['args']}", end="")
 
-    print(f"\n\nFull response: {''.join(full_text2) if full_text2 else '(tool call only)'}")
+    print(
+        f"\n\nFull response: {''.join(full_text2) if full_text2 else '(tool call only)'}"
+    )
 
 
 if __name__ == "__main__":

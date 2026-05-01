@@ -11,7 +11,12 @@ import tempfile
 from pathlib import Path
 
 from the_agents_playbook.tools import ToolRegistry
-from the_agents_playbook.tools.builtins import ShellTool, FileReadTool, FileWriteTool, WebSearchTool
+from the_agents_playbook.tools.builtins import (
+    ShellTool,
+    FileReadTool,
+    FileWriteTool,
+    WebSearchTool,
+)
 
 
 async def main():

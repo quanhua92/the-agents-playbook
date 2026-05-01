@@ -70,7 +70,9 @@ class Workflow:
         for step in self._steps:
             for dep in step.dependencies:
                 if dep not in step_ids:
-                    errors.append(f"Step '{step.id}' depends on '{dep}' which does not exist")
+                    errors.append(
+                        f"Step '{step.id}' depends on '{dep}' which does not exist"
+                    )
 
         # Check for cycles via Kahn's algorithm
         in_degree: dict[str, int] = {s.id: 0 for s in self._steps}
@@ -168,7 +170,9 @@ class Workflow:
 
         return result
 
-    async def run(self, initial_input: Any = None) -> AsyncGenerator[WorkflowEvent, None]:
+    async def run(
+        self, initial_input: Any = None
+    ) -> AsyncGenerator[WorkflowEvent, None]:
         """Execute the workflow step by step, yielding events.
 
         Steps are executed in topological order. Independent steps
@@ -234,7 +238,9 @@ class Workflow:
                     if self._on_step_failure == "abort":
                         yield WorkflowEvent(
                             type="workflow_failed",
-                            data={"error": f"Step '{step.id}' failed: {step_result.error}"},
+                            data={
+                                "error": f"Step '{step.id}' failed: {step_result.error}"
+                            },
                         )
                         return
                     failed_steps.add(step.id)

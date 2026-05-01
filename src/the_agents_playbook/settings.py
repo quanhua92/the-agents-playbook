@@ -93,7 +93,11 @@ def validate_config(cfg: Settings | None = None) -> list[str]:
             "will not work until an embedding provider is configured."
         )
 
-    if cfg.openai_model.startswith("anthropic/") and "anthropic" not in cfg.openai_base_url.lower() and "openrouter" not in cfg.openai_base_url.lower():
+    if (
+        cfg.openai_model.startswith("anthropic/")
+        and "anthropic" not in cfg.openai_base_url.lower()
+        and "openrouter" not in cfg.openai_base_url.lower()
+    ):
         warnings.append(
             f"OPENAI_MODEL starts with 'anthropic/' but OPENAI_BASE_URL "
             f"({cfg.openai_base_url}) may not route to Anthropic. "

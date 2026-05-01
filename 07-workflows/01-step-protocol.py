@@ -53,7 +53,13 @@ async def main():
     # --- WorkflowEvent types ---
 
     print("=== WorkflowEvent Types ===")
-    for event_type in ["step_started", "step_completed", "step_failed", "workflow_completed", "workflow_failed"]:
+    for event_type in [
+        "step_started",
+        "step_completed",
+        "step_failed",
+        "workflow_completed",
+        "workflow_failed",
+    ]:
         event = WorkflowEvent(type=event_type, data={"step_id": "demo"})
         print(f"  {event_type:25s} → data={event.data}")
     print()

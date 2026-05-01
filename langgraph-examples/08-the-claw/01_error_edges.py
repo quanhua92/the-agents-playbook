@@ -19,9 +19,10 @@ from typing import Annotated, Literal
 from langchain_core.messages import AIMessage, BaseMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 
-class ErrorState(dict):
+class ErrorState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     errors: list[str]
     retry_count: int
@@ -59,8 +60,7 @@ def check_result(state: ErrorState) -> Literal["error_handler", "end"]:
     """Route based on whether the operation succeeded."""
     # Check if we got a success message
     has_success = any(
-        "succeeded" in getattr(m, "content", "")
-        for m in state["messages"]
+        "succeeded" in getattr(m, "content", "") for m in state["messages"]
     )
     if has_success:
         return "end"
@@ -75,19 +75,23 @@ def main():
     graph.add_node("error", error_handler)
 
     graph.add_edge(START, "risky")
-    graph.add_conditional_edges("risky", check_result, {"error_handler": "error", "end": END})
+    graph.add_conditional_edges(
+        "risky", check_result, {"error_handler": "error", "end": END}
+    )
     graph.add_edge("error", "risky")  # Retry loop!
 
     app = graph.compile()
 
     print("=== Error Edge Routing ===\n")
-    result = app.invoke({
-        "messages": [],
-        "errors": [],
-        "retry_count": 0,
-    })
+    result = app.invoke(
+        {
+            "messages": [],
+            "errors": [],
+            "retry_count": 0,
+        }
+    )
 
-    print(f"\n=== Final State ===")
+    print("\n=== Final State ===")
     print(f"Retry count: {result['retry_count']}")
     print(f"Errors: {result['errors']}")
     print(f"Final: {result['messages'][-1].content}")

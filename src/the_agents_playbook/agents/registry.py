@@ -13,7 +13,6 @@ Usage:
 """
 
 import logging
-from typing import Any
 
 from .protocol import BaseAgent
 

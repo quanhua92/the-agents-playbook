@@ -12,7 +12,7 @@ from typing import Any
 
 import numpy as np
 
-from .segments import MemorySegment, MemoryTier, SEGMENT_DEFAULTS, SegmentConfig
+from .segments import MemorySegment, MemoryTier, SEGMENT_DEFAULTS
 
 
 class MemoryLifecycle(str, Enum):

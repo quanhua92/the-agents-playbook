@@ -1,7 +1,5 @@
 """Tests for memory/protocol.py — Fact, EmbeddingProvider, BaseMemoryProvider."""
 
-from time import monotonic
-
 import numpy as np
 import pytest
 
@@ -55,6 +53,7 @@ def test_fact_with_all_fields():
 
 def test_fact_is_dataclass():
     import dataclasses
+
     assert dataclasses.is_dataclass(Fact)
 
 
@@ -82,5 +81,6 @@ def test_base_memory_requires_subclass():
 def test_base_memory_consolidate_noop():
     # FakeMemory.consolidate exists and doesn't error
     import asyncio
+
     memory = FakeMemory()
     asyncio.run(memory.consolidate())

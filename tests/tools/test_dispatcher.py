@@ -34,7 +34,9 @@ class StrictTool(Tool):
             "additionalProperties": False,
         }
 
-    async def execute(self, name: str = "", count: int = 0, **kwargs: Any) -> ToolResult:
+    async def execute(
+        self, name: str = "", count: int = 0, **kwargs: Any
+    ) -> ToolResult:
         return ToolResult(output=f"{name} x{count}")
 
 
@@ -104,7 +106,9 @@ def test_validate_missing_required(dispatcher: ToolDispatcher):
 
 def test_validate_extra_properties(dispatcher: ToolDispatcher):
     with pytest.raises(ToolArgumentError) as exc_info:
-        dispatcher.validate_arguments("strict", {"name": "a", "count": 1, "extra": True})
+        dispatcher.validate_arguments(
+            "strict", {"name": "a", "count": 1, "extra": True}
+        )
     assert "Unknown arguments" in str(exc_info.value)
 
 
@@ -121,33 +125,25 @@ async def test_dispatch_one_success(dispatcher: ToolDispatcher):
 
 
 async def test_dispatch_one_bad_json(dispatcher: ToolDispatcher):
-    call_id, result = await dispatcher.dispatch_one(
-        "strict", "bad json", "call-2"
-    )
+    call_id, result = await dispatcher.dispatch_one("strict", "bad json", "call-2")
     assert result.error is True
     assert "Invalid JSON" in result.output
 
 
 async def test_dispatch_one_missing_arg(dispatcher: ToolDispatcher):
-    call_id, result = await dispatcher.dispatch_one(
-        "strict", '{"name": "a"}', "call-3"
-    )
+    call_id, result = await dispatcher.dispatch_one("strict", '{"name": "a"}', "call-3")
     assert result.error is True
     assert "Missing required" in result.output
 
 
 async def test_dispatch_one_unknown_tool(dispatcher: ToolDispatcher):
-    call_id, result = await dispatcher.dispatch_one(
-        "nonexistent", '{}', "call-4"
-    )
+    call_id, result = await dispatcher.dispatch_one("nonexistent", "{}", "call-4")
     assert result.error is True
     assert "not found" in result.output
 
 
 async def test_dispatch_one_execution_error(dispatcher: ToolDispatcher):
-    call_id, result = await dispatcher.dispatch_one(
-        "fail", '{}', "call-5"
-    )
+    call_id, result = await dispatcher.dispatch_one("fail", "{}", "call-5")
     assert result.error is True
     assert "failed" in result.output
 
@@ -157,7 +153,10 @@ async def test_dispatch_one_execution_error(dispatcher: ToolDispatcher):
 
 async def test_dispatch_all_multiple(dispatcher: ToolDispatcher):
     tool_calls = [
-        {"id": "c1", "function": {"name": "strict", "arguments": '{"name": "a", "count": 1}'}},
+        {
+            "id": "c1",
+            "function": {"name": "strict", "arguments": '{"name": "a", "count": 1}'},
+        },
         {"id": "c2", "function": {"name": "fail", "arguments": "{}"}},
     ]
     results = await dispatcher.dispatch_all(tool_calls)

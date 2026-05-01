@@ -25,24 +25,44 @@ from the_agents_playbook.tools import Tool, ToolResult, ToolRegistry
 
 class GrepTool(Tool):
     @property
-    def name(self) -> str: return "grep"
+    def name(self) -> str:
+        return "grep"
+
     @property
-    def description(self) -> str: return "Search for a pattern in files."
+    def description(self) -> str:
+        return "Search for a pattern in files."
+
     @property
     def parameters(self) -> dict:
-        return {"type": "object", "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}}}
+        return {
+            "type": "object",
+            "properties": {"pattern": {"type": "string"}, "path": {"type": "string"}},
+        }
+
     async def execute(self, pattern: str = "", path: str = "", **kw) -> ToolResult:
         return ToolResult(output=f"Found '{pattern}' in {path}:42")
 
 
 class EditTool(Tool):
     @property
-    def name(self) -> str: return "edit"
+    def name(self) -> str:
+        return "edit"
+
     @property
-    def description(self) -> str: return "Edit a file."
+    def description(self) -> str:
+        return "Edit a file."
+
     @property
     def parameters(self) -> dict:
-        return {"type": "object", "properties": {"path": {"type": "string"}, "old": {"type": "string"}, "new": {"type": "string"}}}
+        return {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string"},
+                "old": {"type": "string"},
+                "new": {"type": "string"},
+            },
+        }
+
     async def execute(self, **kw) -> ToolResult:
         return ToolResult(output="File edited.")
 
@@ -96,7 +116,9 @@ async def run_with_real_agent():
         elif event.type == "tool_call":
             risk = middleware.get_risk(event.data["tool_name"])
             needs_approval = middleware.should_prompt(event.data["tool_name"])
-            print(f"  [TOOL]   {event.data['tool_name']}({event.data['arguments']}) [risk={risk.value}, needs_approval={needs_approval}]")
+            print(
+                f"  [TOOL]   {event.data['tool_name']}({event.data['arguments']}) [risk={risk.value}, needs_approval={needs_approval}]"
+            )
         elif event.type == "tool_result":
             status = "ERROR" if event.data["error"] else "OK"
             print(f"  [RESULT] [{status}] {event.data['output']}")
@@ -160,13 +182,17 @@ async def run_simulation():
     print(f"\n  Tool: {tool_name} (risk={risk.value}, needs_approval={needs_approval})")
 
     if needs_approval:
-        print(f"    → Would prompt user for approval")
+        print("    → Would prompt user for approval")
     else:
-        print(f"    → Auto-approved (READ_ONLY)")
+        print("    → Auto-approved (READ_ONLY)")
 
     await hooks.emit(ON_TOOL_CALL, tool_name=tool_name, risk=risk.value)
-    result = await registry.dispatch(tool_name, {"pattern": "typo", "path": "README.md"})
-    await hooks.emit(ON_TOOL_RESULT, tool_name=tool_name, output=result.output, error=result.error)
+    result = await registry.dispatch(
+        tool_name, {"pattern": "typo", "path": "README.md"}
+    )
+    await hooks.emit(
+        ON_TOOL_RESULT, tool_name=tool_name, output=result.output, error=result.error
+    )
     print(f"    → Result: {result.output}")
 
     # Tool call 2: edit (WORKSPACE_WRITE → would prompt)
@@ -179,11 +205,15 @@ async def run_simulation():
         print(f"    → Would prompt: [{risk.value.upper()}] Edit README.md? (y/n)")
         # In a real agent, the prompter would be called here
     else:
-        print(f"    → Auto-approved")
+        print("    → Auto-approved")
 
     await hooks.emit(ON_TOOL_CALL, tool_name=tool_name, risk=risk.value)
-    result = await registry.dispatch(tool_name, {"path": "README.md", "old": "typo", "new": "fix"})
-    await hooks.emit(ON_TOOL_RESULT, tool_name=tool_name, output=result.output, error=result.error)
+    result = await registry.dispatch(
+        tool_name, {"path": "README.md", "old": "typo", "new": "fix"}
+    )
+    await hooks.emit(
+        ON_TOOL_RESULT, tool_name=tool_name, output=result.output, error=result.error
+    )
     print(f"    → Result: {result.output}")
 
     # --- Show audit log ---

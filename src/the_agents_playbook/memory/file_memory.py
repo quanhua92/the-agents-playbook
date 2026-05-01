@@ -6,8 +6,6 @@ HISTORY.md: append-only event log, grep-searchable (write only, line-at-a-time).
 
 import logging
 from pathlib import Path
-from time import monotonic
-from typing import Any
 
 from .protocol import BaseMemoryProvider, Fact
 
@@ -43,11 +41,11 @@ def _parse_facts(text: str) -> list[Fact]:
 
         for line in block.split("\n"):
             if line.startswith("content: "):
-                content = line[len("content: "):]
+                content = line[len("content: ") :]
             elif line.startswith("source: "):
-                source = line[len("source: "):]
+                source = line[len("source: ") :]
             elif line.startswith("tags: "):
-                raw = line[len("tags: "):]
+                raw = line[len("tags: ") :]
                 tags = [t.strip() for t in raw.split(",") if t.strip()]
 
         if content:

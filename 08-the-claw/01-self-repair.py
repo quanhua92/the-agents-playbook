@@ -5,9 +5,8 @@ Errors are collected for post-mortem analysis.
 """
 
 import asyncio
-from unittest.mock import AsyncMock
 
-from the_agents_playbook.claw.repair import RepairLoop, RepairResult
+from the_agents_playbook.claw.repair import RepairLoop
 from the_agents_playbook.tools.protocol import ToolResult
 
 
@@ -39,11 +38,13 @@ async def main():
     # --- Fails then recovers ---
 
     print("=== Recovers After Retry ===")
-    registry = StubRegistry([
-        ToolResult(output="connection refused", error=True),
-        ToolResult(output="connection refused", error=True),
-        ToolResult(output="ok, connected"),
-    ])
+    registry = StubRegistry(
+        [
+            ToolResult(output="connection refused", error=True),
+            ToolResult(output="connection refused", error=True),
+            ToolResult(output="ok, connected"),
+        ]
+    )
     loop = RepairLoop(registry, max_retries=3)
     result = await loop.repair("shell", {"command": "ls"})
     print(f"  Success:   {result.success}")
@@ -54,11 +55,13 @@ async def main():
     # --- Exhausts retries ---
 
     print("=== Exhausts Retries ===")
-    registry = StubRegistry([
-        ToolResult(output="fail", error=True),
-        ToolResult(output="fail", error=True),
-        ToolResult(output="fail", error=True),
-    ])
+    registry = StubRegistry(
+        [
+            ToolResult(output="fail", error=True),
+            ToolResult(output="fail", error=True),
+            ToolResult(output="fail", error=True),
+        ]
+    )
     loop = RepairLoop(registry, max_retries=3)
     result = await loop.repair("tool", {})
     print(f"  Success:   {result.success}")

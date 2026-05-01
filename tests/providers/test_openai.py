@@ -8,7 +8,6 @@ Run with:
 
 import json
 
-import httpx
 import pytest
 from pydantic import BaseModel
 
@@ -18,7 +17,6 @@ from the_agents_playbook.providers.types import (
     InputMessage,
     MessageRequest,
     MessageResponse,
-    OutputMessage,
     ResponseFormat,
     ToolChoice,
     ToolSpec,
@@ -129,7 +127,9 @@ async def test_structured_output_json_object(provider):
     """Request generic json_object output."""
     request = make_request(
         messages=[
-            InputMessage(role="user", content='Return JSON: {"color": "blue", "shape": "circle"}'),
+            InputMessage(
+                role="user", content='Return JSON: {"color": "blue", "shape": "circle"}'
+            ),
         ],
         response_format=ResponseFormat(type="json_object"),
         max_tokens=50,
@@ -238,7 +238,7 @@ async def test_request_log_callback(provider):
     )
     try:
         request = make_request()
-        response = await log_provider.send_message(request)
+        await log_provider.send_message(request)
 
         assert len(collected) >= 1
         log = collected[0]

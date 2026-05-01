@@ -37,7 +37,7 @@ class PlanStep(BaseStep):
     def plan_instructions(self) -> str:
         return self._plan_instructions
 
-    async def run(self, input_data: Any, state: "WorkflowState") -> StepResult:  # noqa: ANN401
+    async def run(self, input_data: Any, state: "WorkflowState") -> StepResult:  # noqa: ANN401,F821
         """Generate a plan and store it in shared context.
 
         In a real implementation, this would invoke an Agent with read-only
@@ -93,7 +93,7 @@ class BuildStep(BaseStep):
     def build_instructions(self) -> str:
         return self._build_instructions
 
-    async def run(self, input_data: Any, state: "WorkflowState") -> StepResult:  # noqa: ANN401
+    async def run(self, input_data: Any, state: "WorkflowState") -> StepResult:  # noqa: ANN401,F821
         """Implement the plan from shared context.
 
         In a real implementation, this would invoke an Agent with write

@@ -97,7 +97,7 @@ Current environment: {{env}}
         partial = soul.render(name="Assistant")
         # {{role}} is not provided, so it remains in the output
         assert "{{role}}" in partial.content
-        print(f"\n✓ Missing variables preserved: '{{role}}' still in output")
+        print("\n✓ Missing variables preserved: '{role}' still in output")
 
         # --- Template not found raises error ---
         try:

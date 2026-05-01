@@ -38,7 +38,11 @@ class WorkflowHookSystem:
         if event not in self._handlers:
             self._handlers[event] = []
         self._handlers[event].append(fn)
-        logger.debug("Registered workflow hook %s → %s", event, getattr(fn, "__qualname__", repr(fn)))
+        logger.debug(
+            "Registered workflow hook %s → %s",
+            event,
+            getattr(fn, "__qualname__", repr(fn)),
+        )
 
     def off(self, event: str, fn: HookFn | None = None) -> None:
         """Remove a handler (or all handlers) for an event."""
@@ -59,7 +63,10 @@ class WorkflowHookSystem:
             try:
                 await fn(**kwargs)
             except Exception:
-                logger.exception("Workflow hook handler %s raised an error", getattr(fn, "__qualname__", repr(fn)))
+                logger.exception(
+                    "Workflow hook handler %s raised an error",
+                    getattr(fn, "__qualname__", repr(fn)),
+                )
 
     def handlers(self, event: str) -> list[HookFn]:
         """Return handlers registered for an event."""

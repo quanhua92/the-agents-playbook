@@ -66,9 +66,7 @@ def make_request(**overrides) -> MessageRequest:
 
 class TestAnthropicBuildHeaders:
     def test_headers_include_x_api_key(self):
-        with patch(
-            "the_agents_playbook.providers.anthropic.settings"
-        ) as mock_settings:
+        with patch("the_agents_playbook.providers.anthropic.settings") as mock_settings:
             mock_settings.anthropic_api_key = "test-key"
             mock_settings.anthropic_base_url = "https://api.anthropic.com/v1"
             provider = AnthropicProvider()
@@ -90,9 +88,7 @@ class TestAnthropicBuildHeaders:
 class TestAnthropicBuildBody:
     @pytest.fixture(autouse=True)
     def _patch_settings(self):
-        with patch(
-            "the_agents_playbook.providers.anthropic.settings"
-        ) as mock_settings:
+        with patch("the_agents_playbook.providers.anthropic.settings") as mock_settings:
             mock_settings.anthropic_api_key = "test-key"
             mock_settings.anthropic_base_url = "https://api.anthropic.com/v1"
             mock_settings.anthropic_model = "claude-sonnet-4-20250514"
@@ -101,17 +97,13 @@ class TestAnthropicBuildBody:
 
     def test_system_goes_to_top_level(self):
         provider = AnthropicProvider()
-        body = provider._build_body(
-            make_request(system="You are a math tutor.")
-        )
+        body = provider._build_body(make_request(system="You are a math tutor."))
         assert body["system"] == "You are a math tutor."
         assert all(m["role"] != "system" for m in body["messages"])
 
     def test_no_system_omits_key(self):
         provider = AnthropicProvider()
-        body = provider._build_body(
-            make_request(system="")
-        )
+        body = provider._build_body(make_request(system=""))
         assert "system" not in body or body["system"] == ""
 
     def test_tools_converted_to_anthropic_format(self):
@@ -143,24 +135,22 @@ class TestAnthropicBuildBody:
     def test_tool_choice_function_maps_correctly(self):
         provider = AnthropicProvider()
         body = provider._build_body(
-            make_request(tool_choice=ToolChoice(type="function", function_name="search"))
+            make_request(
+                tool_choice=ToolChoice(type="function", function_name="search")
+            )
         )
         assert body["tool_choice"] == {"type": "tool", "name": "search"}
 
     def test_tool_choice_auto_omitted(self):
         provider = AnthropicProvider()
-        body = provider._build_body(
-            make_request(tool_choice=ToolChoice(type="auto"))
-        )
+        body = provider._build_body(make_request(tool_choice=ToolChoice(type="auto")))
         assert "tool_choice" not in body
 
 
 class TestAnthropicParseResponse:
     @pytest.fixture(autouse=True)
     def _patch_settings(self):
-        with patch(
-            "the_agents_playbook.providers.anthropic.settings"
-        ) as mock_settings:
+        with patch("the_agents_playbook.providers.anthropic.settings") as mock_settings:
             mock_settings.anthropic_api_key = "test-key"
             mock_settings.anthropic_base_url = "https://api.anthropic.com/v1"
             mock_settings.anthropic_model = "claude-sonnet-4-6"
@@ -209,14 +199,20 @@ class TestAnthropicParseResponse:
 
     def test_unknown_stop_reason_maps_to_unknown(self):
         provider = AnthropicProvider()
-        raw = {"content": [{"type": "text", "text": "hi"}], "stop_reason": "something_weird"}
+        raw = {
+            "content": [{"type": "text", "text": "hi"}],
+            "stop_reason": "something_weird",
+        }
         resp = httpx.Response(200, json=raw)
         result = provider._parse_response(resp)
         assert result.stop_reason == "unknown"
 
     def test_max_tokens_stop_reason(self):
         provider = AnthropicProvider()
-        raw = {"content": [{"type": "text", "text": "truncated"}], "stop_reason": "max_tokens"}
+        raw = {
+            "content": [{"type": "text", "text": "truncated"}],
+            "stop_reason": "max_tokens",
+        }
         resp = httpx.Response(200, json=raw)
         result = provider._parse_response(resp)
         assert result.stop_reason == "max_tokens"
@@ -225,9 +221,7 @@ class TestAnthropicParseResponse:
 class TestAnthropicSend:
     @pytest.fixture(autouse=True)
     def _patch_settings(self):
-        with patch(
-            "the_agents_playbook.providers.anthropic.settings"
-        ) as mock_settings:
+        with patch("the_agents_playbook.providers.anthropic.settings") as mock_settings:
             mock_settings.anthropic_api_key = "test-key"
             mock_settings.anthropic_base_url = "https://api.anthropic.com/v1"
             mock_settings.anthropic_model = "claude-sonnet-4-20250514"
@@ -268,7 +262,9 @@ class TestAnthropicSend:
             ],
         )
         provider = AnthropicProvider(
-            retry_config=RetryConfig(max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False),
+            retry_config=RetryConfig(
+                max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False
+            ),
         )
         result = await provider.send_message(make_request())
         assert result.message.content is not None

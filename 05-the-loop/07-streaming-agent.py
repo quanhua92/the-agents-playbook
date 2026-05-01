@@ -32,6 +32,7 @@ def main():
 
     # Simulate streaming text deltas
     import time
+
     response = "15 multiplied by 23 equals 345."
     for char in response:
         print(char, end="", flush=True)

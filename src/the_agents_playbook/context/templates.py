@@ -56,7 +56,9 @@ class PromptTemplate:
             priority=LayerPriority.STATIC,
         )
 
-    def render_with_defaults(self, defaults: dict[str, str], **overrides: str) -> ContextLayer:
+    def render_with_defaults(
+        self, defaults: dict[str, str], **overrides: str
+    ) -> ContextLayer:
         """Render with defaults merged with explicit overrides.
 
         Override values take precedence over defaults.

@@ -15,8 +15,9 @@ the root's EvaluationHarness.
 import time
 from dataclasses import dataclass, field
 
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from shared import get_openai_llm
 
@@ -76,7 +77,7 @@ class SuiteResult:
 def evaluate_agent(agent, task: str, expected: str) -> BenchmarkResult:
     """Run agent on a single task and compare output to expected."""
     start = time.monotonic()
-    result = agent.invoke({"messages": [("user", task)]})
+    result = agent.invoke({"messages": [HumanMessage(content=task)]})
     elapsed = time.monotonic() - start
 
     final = result["messages"][-1].content
@@ -104,7 +105,7 @@ def evaluate_agent(agent, task: str, expected: str) -> BenchmarkResult:
 
 def main():
     llm = get_openai_llm()
-    agent = create_react_agent(llm, [calculate, lookup_fact])
+    agent = create_agent(llm, [calculate, lookup_fact])
 
     tasks = [
         {"task": "What is 2 + 3?", "expected": "5"},
@@ -129,7 +130,7 @@ def main():
         if not result.success:
             print(f"         Expected '{result.expected}' in: {result.actual[:80]}...")
 
-    print(f"\n=== Suite Summary ===")
+    print("\n=== Suite Summary ===")
     print(f"Total tasks:      {len(suite.results)}")
     print(f"Passed:           {sum(1 for r in suite.results if r.success)}")
     print(f"Failed:           {sum(1 for r in suite.results if not r.success)}")

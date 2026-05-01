@@ -17,14 +17,15 @@ In LangGraph, this is declarative:
   app = graph.compile()
 """
 
-from typing import Annotated
+from typing import Annotated, cast
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 
-class GraphState(dict):
+class GraphState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
 
@@ -32,12 +33,8 @@ def chatbot(state: GraphState) -> dict:
     """A simple node that echoes back the last message."""
     last_msg = state["messages"][-1]
     if isinstance(last_msg, HumanMessage):
-        return {
-            "messages": [AIMessage(content=f"You said: {last_msg.content}")]
-        }
-    return {
-        "messages": [AIMessage(content="(no user message)")]
-    }
+        return {"messages": [AIMessage(content=f"You said: {last_msg.content}")]}
+    return {"messages": [AIMessage(content="(no user message)")]}
 
 
 def main():
@@ -57,7 +54,7 @@ def main():
 
     for inp in inputs:
         print(f"Input: {inp['messages'][0].content}")
-        result = app.invoke(inp)
+        result = app.invoke(cast(GraphState, inp))
         print(f"Output: {result['messages'][-1].content}")
         print()
 

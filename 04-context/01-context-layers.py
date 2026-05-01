@@ -54,8 +54,14 @@ async def main():
         order=1,
     )
 
-    layers = [git_status, system_rules, current_date, tool_definitions,
-              memory_summary, user_preferences]
+    layers = [
+        git_status,
+        system_rules,
+        current_date,
+        tool_definitions,
+        memory_summary,
+        user_preferences,
+    ]
 
     # Sorting puts them in the correct assembly order
     print("=== Before sorting ===")
@@ -70,11 +76,13 @@ async def main():
 
     # Comparison operators work between layers
     assert system_rules < memory_summary  # STATIC < SEMI_STABLE
-    assert tool_definitions < git_status   # STATIC < DYNAMIC
-    assert memory_summary < current_date   # SEMI_STABLE < DYNAMIC
+    assert tool_definitions < git_status  # STATIC < DYNAMIC
+    assert memory_summary < current_date  # SEMI_STABLE < DYNAMIC
 
     # Within same priority, order breaks ties
-    same_priority = ContextLayer(name="a", content="a", priority=LayerPriority.STATIC, order=2)
+    same_priority = ContextLayer(
+        name="a", content="a", priority=LayerPriority.STATIC, order=2
+    )
     assert tool_definitions < same_priority  # order=1 < order=2
 
     print("\n✓ Layer sorting works correctly")

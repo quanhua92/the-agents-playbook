@@ -9,10 +9,12 @@ Run:
 
 import asyncio
 
-import numpy as np
 
-from the_agents_playbook.memory import Fact, InMemoryVectorStore, OpenAIEmbeddingProvider
-from the_agents_playbook.utils.vectors import cosine_similarity
+from the_agents_playbook.memory import (
+    Fact,
+    InMemoryVectorStore,
+    OpenAIEmbeddingProvider,
+)
 
 
 async def main():
@@ -25,8 +27,12 @@ async def main():
         Fact(content="User is a Python developer specializing in AI", source="user"),
         Fact(content="User works on autonomous agent systems", source="project"),
         Fact(content="User prefers functional programming over OOP", source="user"),
-        Fact(content="The project uses httpx for async HTTP requests", source="project"),
-        Fact(content="User dislikes excessive logging in production code", source="user"),
+        Fact(
+            content="The project uses httpx for async HTTP requests", source="project"
+        ),
+        Fact(
+            content="User dislikes excessive logging in production code", source="user"
+        ),
     ]
     for f in facts:
         await store.store(f)
@@ -47,7 +53,9 @@ async def main():
 
     # Show similarity scores
     print("\n=== Scored Search: 'code architecture' (min_score=0.3) ===")
-    scored = await store.search_by_similarity("code architecture", top_k=3, min_score=0.3)
+    scored = await store.search_by_similarity(
+        "code architecture", top_k=3, min_score=0.3
+    )
     for fact, score in scored:
         print(f"  score={score:.4f}  [{fact.source}] {fact.content}")
 
@@ -58,7 +66,9 @@ async def main():
     print(f"  Query: '{query}'")
     for f in results:
         print(f"  [{f.source}] {f.content}")
-    print("  (Real embeddings understand that 'AI systems' relates to 'autonomous agent systems')")
+    print(
+        "  (Real embeddings understand that 'AI systems' relates to 'autonomous agent systems')"
+    )
 
     store.clear()
     print(f"\nCleared. Store size: {store.size}")

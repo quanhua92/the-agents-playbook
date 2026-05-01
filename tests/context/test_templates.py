@@ -50,7 +50,9 @@ class TestPromptTemplate:
         assert layer.content == "Hi Alice!"
 
     def test_render_missing_variables_preserved(self, template_dir: Path):
-        path = _write_template(template_dir / "tpl.md", "Hi {{name}}, role is {{role}}.")
+        path = _write_template(
+            template_dir / "tpl.md", "Hi {{name}}, role is {{role}}."
+        )
         t = PromptTemplate(path)
         layer = t.render(name="Alice")
         assert layer.content == "Hi Alice, role is {{role}}."

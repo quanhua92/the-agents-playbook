@@ -1,8 +1,6 @@
 """Tests for context/builder.py — ContextBuilder."""
 
-import pytest
-
-from the_agents_playbook.context.builder import ContextBuilder, _CHARS_PER_TOKEN
+from the_agents_playbook.context.builder import ContextBuilder
 from the_agents_playbook.context.layers import ContextLayer, LayerPriority
 
 
@@ -66,7 +64,7 @@ def test_layers_sorted_by_priority():
     builder.add_semi_stable(ContextLayer(name="ss", content=""))
 
     layers = builder.layers
-    assert [l.name for l in layers] == ["s", "ss", "d"]
+    assert [lyr.name for lyr in layers] == ["s", "ss", "d"]
 
 
 # ---------------------------------------------------------------------------
@@ -107,7 +105,9 @@ def test_build_sorts_before_assembling():
 
 def test_build_uses_add_preserves_priority():
     builder = ContextBuilder()
-    builder.add(ContextLayer(name="d", content="Dynamic", priority=LayerPriority.DYNAMIC))
+    builder.add(
+        ContextLayer(name="d", content="Dynamic", priority=LayerPriority.DYNAMIC)
+    )
     builder.add(ContextLayer(name="s", content="Static", priority=LayerPriority.STATIC))
     result = builder.build()
     assert result.startswith("Static")

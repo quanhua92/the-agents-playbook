@@ -10,7 +10,7 @@ In LangGraph:
   result = get_weather.invoke({"city": "Tokyo"})
 
   # Within a graph (ToolNode handles routing automatically):
-  agent = create_react_agent(llm, [get_weather, get_population])
+  agent = create_agent(llm, [get_weather, get_population])
 
 ToolNode automatically:
   - Routes each tool_call to the matching @tool
@@ -52,19 +52,23 @@ def dispatch_tools(tools: dict, ai_message: AIMessage) -> list[ToolMessage]:
         tool_name = tc["name"]
         tool_fn = tools.get(tool_name)
         if tool_fn is None:
-            messages.append(ToolMessage(
-                content=f"Error: unknown tool '{tool_name}'",
-                tool_call_id=tc["id"],
-                name=tool_name,
-            ))
+            messages.append(
+                ToolMessage(
+                    content=f"Error: unknown tool '{tool_name}'",
+                    tool_call_id=tc["id"],
+                    name=tool_name,
+                )
+            )
             continue
 
         result = tool_fn.invoke(tc["args"])
-        messages.append(ToolMessage(
-            content=result,
-            tool_call_id=tc["id"],
-            name=tool_name,
-        ))
+        messages.append(
+            ToolMessage(
+                content=result,
+                tool_call_id=tc["id"],
+                name=tool_name,
+            )
+        )
     return messages
 
 
@@ -91,7 +95,9 @@ def main():
     print("\n=== Real LLM Dispatch (Round-Trip Loop) ===\n")
 
     llm = get_openai_llm().bind_tools([get_weather, get_population])
-    messages: list = [HumanMessage(content="What's the weather and population of Tokyo?")]
+    messages: list = [
+        HumanMessage(content="What's the weather and population of Tokyo?")
+    ]
     response = llm.invoke(messages)
 
     while response.tool_calls:

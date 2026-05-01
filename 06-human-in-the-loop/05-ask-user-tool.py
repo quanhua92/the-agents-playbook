@@ -7,7 +7,7 @@ ask the user directly using the AskUserQuestion tool.
 import asyncio
 
 from the_agents_playbook.guardrails import AskUserQuestion
-from the_agents_playbook.guardrails.prompter import SilentPrompter, DenyAllPrompter
+from the_agents_playbook.guardrails.prompter import DenyAllPrompter
 
 
 async def main():
@@ -53,6 +53,7 @@ async def main():
 
     print("=== Register in ToolRegistry ===")
     from the_agents_playbook.tools import ToolRegistry
+
     registry = ToolRegistry()
     registry.register(tool)
     specs = registry.get_specs()

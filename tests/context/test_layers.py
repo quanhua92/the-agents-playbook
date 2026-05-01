@@ -1,7 +1,5 @@
 """Tests for context/layers.py — ContextLayer and LayerPriority."""
 
-import pytest
-
 from the_agents_playbook.context.layers import ContextLayer, LayerPriority
 
 
@@ -69,20 +67,24 @@ def test_sort_by_order_within_priority():
     c = ContextLayer(name="c", content="", priority=LayerPriority.STATIC, order=1)
 
     result = sorted([a, b, c])
-    assert [l.name for l in result] == ["b", "c", "a"]
+    assert [lyr.name for lyr in result] == ["b", "c", "a"]
 
 
 def test_sort_mixed_priority_and_order():
     layers = [
         ContextLayer(name="d1", content="", priority=LayerPriority.DYNAMIC, order=0),
         ContextLayer(name="s1", content="", priority=LayerPriority.STATIC, order=1),
-        ContextLayer(name="ss1", content="", priority=LayerPriority.SEMI_STABLE, order=1),
+        ContextLayer(
+            name="ss1", content="", priority=LayerPriority.SEMI_STABLE, order=1
+        ),
         ContextLayer(name="s0", content="", priority=LayerPriority.STATIC, order=0),
         ContextLayer(name="d0", content="", priority=LayerPriority.DYNAMIC, order=0),
-        ContextLayer(name="ss0", content="", priority=LayerPriority.SEMI_STABLE, order=0),
+        ContextLayer(
+            name="ss0", content="", priority=LayerPriority.SEMI_STABLE, order=0
+        ),
     ]
     result = sorted(layers)
-    names = [l.name for l in result]
+    names = [lyr.name for lyr in result]
     assert names == ["s0", "s1", "ss0", "ss1", "d1", "d0"]
 
 

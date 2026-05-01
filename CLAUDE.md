@@ -152,3 +152,15 @@ uv run pytest tests/<package>/   # single package
 uv run python 0X-xxx/NN-desc.py  # playground example
 cd langgraph-examples && bash run_all.sh  # all LangGraph examples
 ```
+
+## Linting & Type Checking
+
+Before committing, always run ruff and pyright. Use `uvx` to run them without adding to project dependencies:
+
+```bash
+uvx ruff check .                 # lint
+uvx ruff format --check .        # format check
+uvx ruff format .                # auto-format
+npx pyright .                    # type check (error level)
+npx pyright --level warning .    # type check with warnings
+```

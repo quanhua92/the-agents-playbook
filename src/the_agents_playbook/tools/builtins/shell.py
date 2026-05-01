@@ -3,7 +3,6 @@
 import asyncio
 import logging
 import re
-import shlex
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +39,9 @@ class ShellTool(Tool):
         workspace: Path | str | None = None,
         timeout_seconds: float = 30.0,
     ) -> None:
-        self._deny_patterns = [re.compile(p) for p in (deny_patterns or DEFAULT_DENY_PATTERNS)]
+        self._deny_patterns = [
+            re.compile(p) for p in (deny_patterns or DEFAULT_DENY_PATTERNS)
+        ]
         self._workspace = Path(workspace) if workspace else None
         self._timeout = timeout_seconds
 
@@ -95,7 +96,9 @@ class ShellTool(Tool):
             if stdout:
                 output_parts.append(stdout.decode("utf-8", errors="replace"))
             if stderr:
-                output_parts.append(f"[stderr] {stderr.decode('utf-8', errors='replace')}")
+                output_parts.append(
+                    f"[stderr] {stderr.decode('utf-8', errors='replace')}"
+                )
 
             return_code = process.returncode or 0
             if return_code != 0:

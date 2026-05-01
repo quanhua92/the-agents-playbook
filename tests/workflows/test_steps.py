@@ -1,7 +1,5 @@
 """Tests for workflows.steps — PlanStep and BuildStep."""
 
-import pytest
-
 from the_agents_playbook.workflows.steps import BuildStep, PlanStep
 from the_agents_playbook.workflows.state import WorkflowState
 
@@ -34,7 +32,9 @@ class TestPlanStep:
 
 class TestBuildStep:
     def test_properties(self):
-        step = BuildStep(step_id="build", dependencies=["plan"], build_instructions="Implement")
+        step = BuildStep(
+            step_id="build", dependencies=["plan"], build_instructions="Implement"
+        )
         assert step.id == "build"
         assert step.dependencies == ["plan"]
         assert step.build_instructions == "Implement"
@@ -48,7 +48,11 @@ class TestBuildStep:
         state = WorkflowState()
         await plan.run("Fix auth", state)
 
-        build = BuildStep(step_id="build", dependencies=["plan"], build_instructions="Implement the fix")
+        build = BuildStep(
+            step_id="build",
+            dependencies=["plan"],
+            build_instructions="Implement the fix",
+        )
         result = await build.run(None, state)
 
         assert result.success is True

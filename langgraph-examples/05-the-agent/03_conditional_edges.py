@@ -22,16 +22,18 @@ from typing import Annotated, Literal
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 
-class RouterState(dict):
+class RouterState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     route: str
 
 
 def classifier(state: RouterState) -> dict:
     """Classify the input and set route."""
-    last = state["messages"][-1].content if state["messages"] else ""
+    last_msg = state["messages"][-1].content if state["messages"] else ""
+    last = last_msg if isinstance(last_msg, str) else str(last_msg)
     if "?" in last:
         return {"route": "question"}
     elif "!" in last or last.isupper():
@@ -41,19 +43,29 @@ def classifier(state: RouterState) -> dict:
 
 
 def handle_question(state: RouterState) -> dict:
-    return {"messages": [AIMessage(content="I see you have a question. Let me help you with that.")]}
+    return {
+        "messages": [
+            AIMessage(content="I see you have a question. Let me help you with that.")
+        ]
+    }
 
 
 def handle_exclamation(state: RouterState) -> dict:
-    return {"messages": [AIMessage(content="No need to shout! I'm right here and ready to help.")]}
+    return {
+        "messages": [
+            AIMessage(content="No need to shout! I'm right here and ready to help.")
+        ]
+    }
 
 
 def handle_statement(state: RouterState) -> dict:
     return {"messages": [AIMessage(content="Thanks for the information. Noted.")]}
 
 
-def route_message(state: RouterState) -> Literal["question", "exclamation", "statement"]:
-    return state["route"]
+def route_message(
+    state: RouterState,
+) -> Literal["question", "exclamation", "statement"]:
+    return state["route"]  # type: ignore[return-value]
 
 
 def main():

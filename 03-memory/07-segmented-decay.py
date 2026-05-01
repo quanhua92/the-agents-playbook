@@ -14,7 +14,6 @@ from the_agents_playbook.memory import (
     MemoryLifecycle,
     MemoryRecord,
     MemorySegment,
-    MemoryTier,
 )
 
 
@@ -108,8 +107,10 @@ def main():
     from the_agents_playbook.memory import SEGMENT_DEFAULTS
 
     for segment, config in SEGMENT_DEFAULTS.items():
-        print(f"  {segment.value:15s} tier={config.tier.value:12s} "
-              f"importance={config.importance:.1f} decay_rate={config.decay_rate}")
+        print(
+            f"  {segment.value:15s} tier={config.tier.value:12s} "
+            f"importance={config.importance:.1f} decay_rate={config.decay_rate}"
+        )
 
     # --- Score each memory at different time points ---
     print("\n=== Decay Scores Over Time ===\n")
@@ -141,9 +142,10 @@ def main():
 
     # Manually backdate the context records to simulate old age
     import time
+
     now = time.monotonic()
-    records[9].timestamp = now - 365 * 86400   # 1 year old
-    records[10].timestamp = now - 365 * 86400   # 1 year old
+    records[9].timestamp = now - 365 * 86400  # 1 year old
+    records[10].timestamp = now - 365 * 86400  # 1 year old
 
     pruned = decay.prune(records)
 
@@ -151,8 +153,10 @@ def main():
     for record in pruned:
         days_old = (now - record.timestamp) / 86400.0
         score = decay.score(record, days_old)
-        print(f"  [{record.lifecycle.value}] {record.content[:50]} "
-              f"(was {days_old:.0f} days old, score={score:.4f})")
+        print(
+            f"  [{record.lifecycle.value}] {record.content[:50]} "
+            f"(was {days_old:.0f} days old, score={score:.4f})"
+        )
 
     print("\nRemaining active records:")
     for record in records:

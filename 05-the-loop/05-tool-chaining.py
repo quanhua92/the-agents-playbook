@@ -10,7 +10,7 @@ This is what separates "an agent that can call a tool" from
 
 import asyncio
 
-from the_agents_playbook.loop import ToolChain, ToolChainer, score_tools
+from the_agents_playbook.loop import ToolChainer, score_tools
 from the_agents_playbook.tools import Tool, ToolResult, ToolRegistry
 
 
@@ -93,10 +93,12 @@ async def main():
     chainer = ToolChainer(registry, max_chain_length=3, entropy_threshold=1.0)
 
     print("=== Single-step chain ===")
-    chain = await chainer.execute_chain({
-        "tool_name": "add",
-        "arguments": {"a": 10, "b": 20},
-    })
+    chain = await chainer.execute_chain(
+        {
+            "tool_name": "add",
+            "arguments": {"a": 10, "b": 20},
+        }
+    )
     print(f"  Steps:    {len(chain.steps)}")
     print(f"  Output:   {chain.final_output}")
     print(f"  Confidence: {chain.confidence}")
@@ -105,10 +107,12 @@ async def main():
     # --- Chain with error ---
 
     print("=== Chain with error ===")
-    chain = await chainer.execute_chain({
-        "tool_name": "fail",
-        "arguments": {},
-    })
+    chain = await chainer.execute_chain(
+        {
+            "tool_name": "fail",
+            "arguments": {},
+        }
+    )
     print(f"  Steps:    {len(chain.steps)}")
     print(f"  Output:   {chain.final_output}")
     print(f"  Confidence: {chain.confidence}")
@@ -121,11 +125,17 @@ async def main():
     err_result = ToolResult(output="fail", error=True)
 
     # Low entropy → stop chaining
-    print(f"  Low entropy (0.3):  should_chain(ok) = {chainer.should_chain(ok_result, 0.3)}")
+    print(
+        f"  Low entropy (0.3):  should_chain(ok) = {chainer.should_chain(ok_result, 0.3)}"
+    )
     # High entropy → continue chaining
-    print(f"  High entropy (2.0): should_chain(ok) = {chainer.should_chain(ok_result, 2.0)}")
+    print(
+        f"  High entropy (2.0): should_chain(ok) = {chainer.should_chain(ok_result, 2.0)}"
+    )
     # Error → always stop
-    print(f"  Error result:       should_chain(err) = {chainer.should_chain(err_result, 2.0)}")
+    print(
+        f"  Error result:       should_chain(err) = {chainer.should_chain(err_result, 2.0)}"
+    )
     print()
 
     # --- Entropy-aware tool scoring ---
@@ -138,9 +148,9 @@ async def main():
     print(f"  Threshold: {chainer.max_chain_length}")
 
     if entropy < 1.0:
-        print(f"  → Low uncertainty: proceed with top tool (add)")
+        print("  → Low uncertainty: proceed with top tool (add)")
     else:
-        print(f"  → High uncertainty: consider asking user")
+        print("  → High uncertainty: consider asking user")
 
 
 if __name__ == "__main__":

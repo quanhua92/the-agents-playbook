@@ -1,7 +1,6 @@
 """Tests for BaseProvider: error classification, retry, logging, key rotation, pool limits."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -193,7 +192,9 @@ class TestRetry:
             ]
         )
         provider = StubProvider(
-            retry_config=RetryConfig(max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False),
+            retry_config=RetryConfig(
+                max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False
+            ),
         )
         result = await provider.send_message(make_request())
         assert result.message.content == "Hello! How can I help you today?"
@@ -204,7 +205,9 @@ class TestRetry:
             return_value=httpx.Response(429, json=mock_error_response)
         )
         provider = StubProvider(
-            retry_config=RetryConfig(max_retries=2, base_delay=0.01, max_delay=0.05, jitter=False),
+            retry_config=RetryConfig(
+                max_retries=2, base_delay=0.01, max_delay=0.05, jitter=False
+            ),
         )
         with pytest.raises(ProviderError) as exc_info:
             await provider.send_message(make_request())
@@ -215,7 +218,9 @@ class TestRetry:
         respx.post("https://api.example.com/v1/chat/completions").mock(
             return_value=httpx.Response(401, json=mock_error_response)
         )
-        provider = StubProvider(retry_config=RetryConfig(max_retries=3, base_delay=0.01))
+        provider = StubProvider(
+            retry_config=RetryConfig(max_retries=3, base_delay=0.01)
+        )
         with pytest.raises(ProviderError) as exc_info:
             await provider.send_message(make_request())
         assert exc_info.value.code == ProviderErrorCode.AUTH_FAILED
@@ -229,7 +234,9 @@ class TestRetry:
             ]
         )
         provider = StubProvider(
-            retry_config=RetryConfig(max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False),
+            retry_config=RetryConfig(
+                max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False
+            ),
         )
         result = await provider.send_message(make_request())
         assert result.message.content is not None
@@ -241,7 +248,12 @@ class TestRetry:
         async def failing_fn():
             nonlocal call_count
             call_count += 1
-            raise ProviderError("429", code=ProviderErrorCode.RATE_LIMITED, retryable=True, status_code=429)
+            raise ProviderError(
+                "429",
+                code=ProviderErrorCode.RATE_LIMITED,
+                retryable=True,
+                status_code=429,
+            )
 
         with pytest.raises(ProviderError):
             await provider._with_retry(failing_fn)
@@ -335,8 +347,6 @@ class TestCredentialRotation:
     @respx.mock
     async def test_auto_rotate_on_401_with_multi_key_pool(self, mock_chat_response):
         pool = CredentialPool(keys=["key-1", "key-2"])
-        # Track which Authorization header was used
-        captured_headers: list[dict] = []
 
         route = respx.post("https://api.example.com/v1/chat/completions").mock(
             side_effect=[
@@ -351,7 +361,9 @@ class TestCredentialRotation:
 
         provider = StubProvider(
             credential_pool=pool,
-            retry_config=RetryConfig(max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False),
+            retry_config=RetryConfig(
+                max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False
+            ),
         )
         result = await provider.send_message(make_request())
         assert result.message.content is not None
@@ -365,7 +377,9 @@ class TestCredentialRotation:
         )
         provider = StubProvider(
             credential_pool=pool,
-            retry_config=RetryConfig(max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False),
+            retry_config=RetryConfig(
+                max_retries=3, base_delay=0.01, max_delay=0.05, jitter=False
+            ),
         )
         with pytest.raises(ProviderError) as exc_info:
             await provider.send_message(make_request())
@@ -416,7 +430,9 @@ class TestPoolLimits:
         assert expected.keepalive_expiry == 30.0
 
     def test_custom_pool_config_stored(self):
-        cfg = PoolConfig(max_connections=20, max_keepalive_connections=10, keepalive_expiry=60.0)
+        cfg = PoolConfig(
+            max_connections=20, max_keepalive_connections=10, keepalive_expiry=60.0
+        )
         provider = StubProvider(pool_config=cfg)
         assert provider._pool_config.max_connections == 20
         assert provider._pool_config.max_keepalive_connections == 10
@@ -428,7 +444,9 @@ class TestPoolLimits:
             return_value=httpx.Response(200, json=mock_chat_response),
         )
         provider = StubProvider(
-            pool_config=PoolConfig(max_connections=20, max_keepalive_connections=10, keepalive_expiry=60.0),
+            pool_config=PoolConfig(
+                max_connections=20, max_keepalive_connections=10, keepalive_expiry=60.0
+            ),
             retry_config=RetryConfig(max_retries=0),
         )
         result = await provider.send_message(make_request())
@@ -460,9 +478,7 @@ class TestPerRequestTimeout:
         )
         provider = StubProvider(retry_config=RetryConfig(max_retries=0))
         # This should apply a 5s read timeout override
-        result = await provider.send_message(
-            make_request(timeout_seconds=5.0)
-        )
+        result = await provider.send_message(make_request(timeout_seconds=5.0))
         assert result.message.content is not None
 
     @respx.mock
@@ -472,9 +488,7 @@ class TestPerRequestTimeout:
         )
         provider = StubProvider(retry_config=RetryConfig(max_retries=0))
         # Explicitly None — should not override
-        result = await provider.send_message(
-            make_request(timeout_seconds=None)
-        )
+        result = await provider.send_message(make_request(timeout_seconds=None))
         assert result.message.content is not None
 
 

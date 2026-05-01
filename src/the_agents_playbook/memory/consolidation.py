@@ -2,7 +2,6 @@
 
 import json
 import logging
-from typing import Any
 
 from .file_memory import DualFileMemory
 from .protocol import Fact
@@ -58,7 +57,7 @@ class LLMConsolidator:
         # Truncate history if it exceeds the limit
         lines = history.strip().split("\n")
         if len(lines) > self._max_history_lines:
-            history = "\n".join(lines[-self._max_history_lines:])
+            history = "\n".join(lines[-self._max_history_lines :])
             logger.info(
                 "Truncated history to last %d lines for consolidation",
                 self._max_history_lines,
@@ -162,4 +161,5 @@ class LLMConsolidator:
     def _get_model() -> str:
         """Get the model name from settings."""
         from the_agents_playbook import settings
+
         return settings.openai_model

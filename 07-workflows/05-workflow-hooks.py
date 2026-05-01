@@ -5,7 +5,6 @@ custom middleware without modifying step or workflow code.
 """
 
 import asyncio
-from unittest.mock import AsyncMock
 
 from the_agents_playbook.workflows.hooks import (
     ON_STEP_FAILURE,
@@ -14,7 +13,6 @@ from the_agents_playbook.workflows.hooks import (
     WorkflowHookSystem,
 )
 from the_agents_playbook.workflows.protocol import BaseStep, StepResult
-from the_agents_playbook.workflows.state import WorkflowState
 from the_agents_playbook.workflows.workflow import Workflow
 
 
@@ -27,7 +25,9 @@ class SimpleStep(BaseStep):
         return self._id
 
     async def run(self, input_data, state):
-        return StepResult(step_id=self._id, success=True, summary=f"{self._id} completed")
+        return StepResult(
+            step_id=self._id, success=True, summary=f"{self._id} completed"
+        )
 
 
 async def main():
@@ -48,10 +48,12 @@ async def main():
     # --- Run workflow with hooks ---
 
     print("=== Workflow with Hooks ===")
-    wf = Workflow(steps=[
-        SimpleStep("research"),
-        SimpleStep("plan"),
-    ])
+    wf = Workflow(
+        steps=[
+            SimpleStep("research"),
+            SimpleStep("plan"),
+        ]
+    )
     wf.set_hooks(hooks)
 
     async for event in wf.run("test"):

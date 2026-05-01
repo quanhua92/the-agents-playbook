@@ -7,11 +7,15 @@ so the agent loop can feed them back to the LLM.
 """
 
 import asyncio
-import json
 from typing import Any
 
 from the_agents_playbook import settings
-from the_agents_playbook.providers import OpenAIProvider, MessageRequest, InputMessage, ToolChoice
+from the_agents_playbook.providers import (
+    OpenAIProvider,
+    MessageRequest,
+    InputMessage,
+    ToolChoice,
+)
 from the_agents_playbook.tools import Tool, ToolResult, ToolRegistry
 from the_agents_playbook.tools.dispatcher import ToolDispatcher
 
@@ -60,7 +64,9 @@ async def main():
             model=settings.openai_model,
             system="You have access to a reverse_string tool. Use it when the user asks you to reverse text.",
             messages=[
-                InputMessage(role="user", content="Please reverse the string 'hello world'"),
+                InputMessage(
+                    role="user", content="Please reverse the string 'hello world'"
+                ),
             ],
             tools=registry.get_specs(),  # list[ToolSpec] feeds directly into provider
             tool_choice=ToolChoice(type="auto"),
@@ -86,7 +92,9 @@ async def main():
     print("\n=== Error handling demos ===")
 
     # Bad JSON arguments
-    result = await dispatcher.dispatch_one("reverse_string", "not valid json{{{", "test-id")
+    result = await dispatcher.dispatch_one(
+        "reverse_string", "not valid json{{{", "test-id"
+    )
     print(f"Bad JSON:    {result.output} (error={result.error})")
 
     # Missing required argument

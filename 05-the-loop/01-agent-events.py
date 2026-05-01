@@ -35,10 +35,14 @@ def main():
     )
 
     status_event = AgentEvent(type="status", data={"message": "Thinking..."})
-    print(f"Status event:  type={status_event.type!r}, msg={status_event.data['message']!r}")
+    print(
+        f"Status event:  type={status_event.type!r}, msg={status_event.data['message']!r}"
+    )
 
     error_event = AgentEvent(type="error", data={"message": "Provider timeout"})
-    print(f"Error event:   type={error_event.type!r}, msg={error_event.data['message']!r}")
+    print(
+        f"Error event:   type={error_event.type!r}, msg={error_event.data['message']!r}"
+    )
 
     print()
 
@@ -48,7 +52,9 @@ def main():
     print(f"Default text event: {default_event.data}")  # {"text": ""}
 
     default_tool_call = AgentEvent(type="tool_call")
-    print(f"Default tool_call:  {default_tool_call.data}")  # {"tool_name": "", "arguments": {}}
+    print(
+        f"Default tool_call:  {default_tool_call.data}"
+    )  # {"tool_name": "", "arguments": {}}
 
     print()
 
@@ -59,7 +65,7 @@ def main():
         tool_calls_made=1,
         final_response="Hello, world!",
     )
-    print(f"TurnResult:")
+    print("TurnResult:")
     print(f"  Events:         {len(turn.events)}")
     print(f"  Tool calls:     {turn.tool_calls_made}")
     print(f"  Final response: {turn.final_response}")

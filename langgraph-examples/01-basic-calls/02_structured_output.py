@@ -37,12 +37,14 @@ def main():
 
     print("=== Structured Output ===")
     review = structured_llm.invoke(review_text)
+    typed_review = (
+        MovieReview.model_validate(review) if isinstance(review, dict) else review
+    )
 
-    # Returns a typed Pydantic instance directly -- no manual parsing
-    print(review.model_dump_json(indent=2))
-    print(f"\nType: {type(review).__name__}")
-    print(f"Rating: {review.rating}/10")
-    print(f"Recommended: {review.recommended}")
+    print(typed_review.model_dump_json(indent=2))
+    print(f"\nType: {type(typed_review).__name__}")
+    print(f"Rating: {typed_review.rating}/10")
+    print(f"Recommended: {typed_review.recommended}")
 
 
 if __name__ == "__main__":

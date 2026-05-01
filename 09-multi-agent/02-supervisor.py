@@ -42,7 +42,9 @@ class ResearchWorker(BaseAgent):
     async def run(self, prompt: str):
         yield AgentEvent(
             type="text",
-            data={"text": f"[Research] Investigated: {prompt}\nFound: Key facts and data points."},
+            data={
+                "text": f"[Research] Investigated: {prompt}\nFound: Key facts and data points."
+            },
             source=self.name,
         )
 
@@ -65,7 +67,9 @@ class WriterWorker(BaseAgent):
     async def run(self, prompt: str):
         yield AgentEvent(
             type="text",
-            data={"text": f"[Writing] Composed content about: {prompt}\nDraft: Well-structured paragraphs..."},
+            data={
+                "text": f"[Writing] Composed content about: {prompt}\nDraft: Well-structured paragraphs..."
+            },
             source=self.name,
         )
 
@@ -88,7 +92,9 @@ class ReviewWorker(BaseAgent):
     async def run(self, prompt: str):
         yield AgentEvent(
             type="text",
-            data={"text": f"[Review] Analyzed: {prompt}\nFeedback: Clear structure, minor improvements needed."},
+            data={
+                "text": f"[Review] Analyzed: {prompt}\nFeedback: Clear structure, minor improvements needed."
+            },
             source=self.name,
         )
 
@@ -153,11 +159,15 @@ class SupervisorAgent:
 
         # Synthesize
         print(f"\n[Supervisor] Synthesizing results from {len(subtasks)} subtask(s)...")
-        all_events.append(AgentEvent(
-            type="text",
-            data={"text": f"[Supervisor] Final synthesis combining all {len(subtasks)} worker outputs."},
-            source="supervisor",
-        ))
+        all_events.append(
+            AgentEvent(
+                type="text",
+                data={
+                    "text": f"[Supervisor] Final synthesis combining all {len(subtasks)} worker outputs."
+                },
+                source="supervisor",
+            )
+        )
 
         return all_events
 
@@ -175,19 +185,15 @@ async def main():
 
     # Task 1: Simple delegation (no decomposition needed)
     print("=" * 60)
-    events = await supervisor.run("Research the history of Python programming language")
+    await supervisor.run("Research the history of Python programming language")
 
     # Task 2: Complex task requiring decomposition
     print("\n" + "=" * 60)
-    events = await supervisor.run(
-        "Write a report on climate change effects on ocean ecosystems"
-    )
+    await supervisor.run("Write a report on climate change effects on ocean ecosystems")
 
     # Task 3: Multi-part task
     print("\n" + "=" * 60)
-    events = await supervisor.run(
-        "Research renewable energy trends and write a summary"
-    )
+    await supervisor.run("Research renewable energy trends and write a summary")
 
     print("\n\n=== Pattern Summary ===\n")
     print("1. Supervisor receives complex task")

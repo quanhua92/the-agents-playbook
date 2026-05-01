@@ -55,13 +55,15 @@ def main():
     # Try to add more than fits
     print("--- Budget Exceeded ---\n")
     big_layer = budget.reserve(100_000)
-    print(f"  Reserve 100k more tokens: {'OK' if big_layer else 'REJECTED (not enough budget)'}")
+    print(
+        f"  Reserve 100k more tokens: {'OK' if big_layer else 'REJECTED (not enough budget)'}"
+    )
     print(f"  Budget: {budget}\n")
 
     # Release and try again
     print("--- Release and Retry ---\n")
     budget.release(40_000)
-    print(f"  Released 40k tokens")
+    print("  Released 40k tokens")
     print(f"  Budget: {budget}\n")
     big_layer = budget.reserve(100_000)
     print(f"  Reserve 100k more tokens: {'OK' if big_layer else 'REJECTED'}\n")
@@ -73,9 +75,17 @@ def main():
     context_layers = [
         ContextLayer("system", "You are a helpful agent.", LayerPriority.STATIC),
         ContextLayer("tools", "tool1: ...\ntool2: ...", LayerPriority.STATIC),
-        ContextLayer("memory", "User likes dark mode. Working on auth.", LayerPriority.SEMI_STABLE),
-        ContextLayer("git_status", "On branch main, 3 files changed", LayerPriority.DYNAMIC),
-        ContextLayer("date", "Today is Wednesday, April 30, 2026", LayerPriority.DYNAMIC),
+        ContextLayer(
+            "memory",
+            "User likes dark mode. Working on auth.",
+            LayerPriority.SEMI_STABLE,
+        ),
+        ContextLayer(
+            "git_status", "On branch main, 3 files changed", LayerPriority.DYNAMIC
+        ),
+        ContextLayer(
+            "date", "Today is Wednesday, April 30, 2026", LayerPriority.DYNAMIC
+        ),
     ]
 
     # Try to reserve all layers — DYNAMIC ones might not fit
@@ -86,7 +96,9 @@ def main():
         tokens = len(layer.content.split())  # rough token estimate
         success = budget2.reserve(tokens)
         status = "reserved" if success else "TRIMMED (dropped)"
-        print(f"  [{layer.priority.name:12s}] {layer.name:15s} ~{tokens:3d} tokens  -> {status}")
+        print(
+            f"  [{layer.priority.name:12s}] {layer.name:15s} ~{tokens:3d} tokens  -> {status}"
+        )
 
     print(f"\nFinal budget: {budget2}\n")
 
@@ -107,11 +119,13 @@ def main():
     for model, data in by_model.items():
         cost = data["cost"]
         cost_str = f"${cost:.4f}" if cost is not None else "unknown"
-        print(f"  {model:20s}  "
-              f"input={data['input_tokens']:>6,}  "
-              f"output={data['output_tokens']:>6,}  "
-              f"requests={data['request_count']}  "
-              f"cost={cost_str}")
+        print(
+            f"  {model:20s}  "
+            f"input={data['input_tokens']:>6,}  "
+            f"output={data['output_tokens']:>6,}  "
+            f"requests={data['request_count']}  "
+            f"cost={cost_str}"
+        )
 
     total_in, total_out, total_all = tracker.total_tokens()
     print(f"\n  Total: {total_all:,} tokens ({total_in:,} in, {total_out:,} out)")

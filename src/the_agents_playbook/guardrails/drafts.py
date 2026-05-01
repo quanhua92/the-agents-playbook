@@ -24,10 +24,10 @@ logger = logging.getLogger(__name__)
 class DraftStatus(str, Enum):
     """Lifecycle states for a draft action."""
 
-    PENDING = "pending"      # Created by worker, awaiting review
-    SENT = "sent"            # Approved and committed by dispatcher
-    REJECTED = "rejected"    # Explicitly rejected
-    EXPIRED = "expired"      # Timed out without approval
+    PENDING = "pending"  # Created by worker, awaiting review
+    SENT = "sent"  # Approved and committed by dispatcher
+    REJECTED = "rejected"  # Explicitly rejected
+    EXPIRED = "expired"  # Timed out without approval
 
 
 class DraftKind(str, Enum):
@@ -70,6 +70,7 @@ class Draft:
     def __post_init__(self) -> None:
         if self.created_at == 0.0:
             import time
+
             self.created_at = time.monotonic()
 
     @property
@@ -103,7 +104,9 @@ class DraftStore:
         self._drafts[draft.draft_id] = draft
         logger.info(
             "Draft created: %s [%s] %s",
-            draft.draft_id, draft.kind.value, draft.summary[:50],
+            draft.draft_id,
+            draft.kind.value,
+            draft.summary[:50],
         )
         return draft
 
@@ -113,10 +116,7 @@ class DraftStore:
 
     def list_pending(self, worker_id: str | None = None) -> list[Draft]:
         """List all pending drafts, optionally filtered by worker."""
-        drafts = [
-            d for d in self._drafts.values()
-            if d.is_pending
-        ]
+        drafts = [d for d in self._drafts.values() if d.is_pending]
         if worker_id:
             drafts = [d for d in drafts if d.worker_id == worker_id]
         return sorted(drafts, key=lambda d: d.created_at)
@@ -124,6 +124,7 @@ class DraftStore:
     def approve(self, draft_id: str) -> Draft | None:
         """Approve a pending draft."""
         import time
+
         draft = self._drafts.get(draft_id)
         if draft is None:
             return None
@@ -138,6 +139,7 @@ class DraftStore:
     def reject(self, draft_id: str) -> Draft | None:
         """Reject a pending draft."""
         import time
+
         draft = self._drafts.get(draft_id)
         if draft is None:
             return None
@@ -152,6 +154,7 @@ class DraftStore:
     def expire_stale(self) -> list[Draft]:
         """Mark pending drafts that have exceeded their expiration time."""
         import time
+
         now = time.monotonic()
         expired: list[Draft] = []
         for draft in self._drafts.values():
@@ -233,12 +236,14 @@ class DraftTool(Tool):
         except ValueError:
             kind = DraftKind.CUSTOM
 
-        draft = self._store.save(Draft(
-            kind=kind,
-            summary=kwargs.get("summary", ""),
-            payload=kwargs.get("payload", {}),
-            worker_id=self._worker_id,
-        ))
+        draft = self._store.save(
+            Draft(
+                kind=kind,
+                summary=kwargs.get("summary", ""),
+                payload=kwargs.get("payload", {}),
+                worker_id=self._worker_id,
+            )
+        )
 
         return ToolResult(
             output=(
@@ -304,8 +309,7 @@ class ApprovalTool(Tool):
             lines = [f"Pending drafts ({len(pending)}):"]
             for d in pending:
                 lines.append(
-                    f"  [{d.draft_id}] {d.kind.value}: {d.summary} "
-                    f"(from {d.worker_id})"
+                    f"  [{d.draft_id}] {d.kind.value}: {d.summary} (from {d.worker_id})"
                 )
             return ToolResult(output="\n".join(lines))
 

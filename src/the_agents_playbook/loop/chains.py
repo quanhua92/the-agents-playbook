@@ -77,7 +77,11 @@ class ToolChainer:
 
         # Stop if entropy is low enough (tool selection is clear)
         if entropy < self._entropy_threshold:
-            logger.info("Stopping chain: entropy %.2f below threshold %.2f", entropy, self._entropy_threshold)
+            logger.info(
+                "Stopping chain: entropy %.2f below threshold %.2f",
+                entropy,
+                self._entropy_threshold,
+            )
             return False
 
         return True
@@ -113,20 +117,24 @@ class ToolChainer:
                 result = await self._registry.dispatch(tool_name, arguments)
             except Exception as exc:
                 logger.warning("Chain step %d failed: %s", step_num + 1, exc)
-                chain.steps.append({
-                    "tool_name": tool_name,
-                    "arguments": arguments,
-                    "result": ToolResult(output=str(exc), error=True),
-                })
+                chain.steps.append(
+                    {
+                        "tool_name": tool_name,
+                        "arguments": arguments,
+                        "result": ToolResult(output=str(exc), error=True),
+                    }
+                )
                 chain.confidence = 0.0
                 chain.final_output = str(exc)
                 break
 
-            chain.steps.append({
-                "tool_name": tool_name,
-                "arguments": arguments,
-                "result": result,
-            })
+            chain.steps.append(
+                {
+                    "tool_name": tool_name,
+                    "arguments": arguments,
+                    "result": result,
+                }
+            )
             chain.final_output = result.output
 
             # Mark confidence as zero if tool returned an error

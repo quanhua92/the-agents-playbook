@@ -20,21 +20,21 @@ class MemorySegment(str, Enum):
     """
 
     # Permanent — never decay
-    IDENTITY = "identity"              # Name, email, pronouns
+    IDENTITY = "identity"  # Name, email, pronouns
 
     # Long-term — very slow decay
-    EXPERTISE = "expertise"            # Skills, proficiency levels
-    PREFERENCE = "preference"          # Style, format preferences
-    RELATIONSHIP = "relationship"      # Org, team, family
-    GOAL = "goal"                      # Intentions, plans
+    EXPERTISE = "expertise"  # Skills, proficiency levels
+    PREFERENCE = "preference"  # Style, format preferences
+    RELATIONSHIP = "relationship"  # Org, team, family
+    GOAL = "goal"  # Intentions, plans
 
     # Medium-term — moderate decay
-    FEEDBACK = "feedback"              # Agent performance signals
-    PROJECT = "project"                # Active deliverables
-    KNOWLEDGE = "knowledge"            # Tool/system facts
+    FEEDBACK = "feedback"  # Agent performance signals
+    PROJECT = "project"  # Active deliverables
+    KNOWLEDGE = "knowledge"  # Tool/system facts
 
     # Short-term — fast decay
-    CONTEXT = "context"                # Temporary situation
+    CONTEXT = "context"  # Temporary situation
 
 
 class MemoryTier(str, Enum):

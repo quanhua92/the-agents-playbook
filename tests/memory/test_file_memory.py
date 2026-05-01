@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-import pytest
 
 from the_agents_playbook.memory import DualFileMemory, Fact
 from the_agents_playbook.memory.file_memory import _parse_facts, _serialize_facts
@@ -110,7 +109,7 @@ async def test_store_appends_history(tmp_path: Path):
     assert "event 1" in history
     assert "event 2" in history
     # Should have 2 lines (store_event not called, but store also appends)
-    lines = [l for l in history.strip().split("\n") if l]
+    lines = [ln for ln in history.strip().split("\n") if ln]
     assert len(lines) == 2
 
 

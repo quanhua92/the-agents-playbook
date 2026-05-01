@@ -6,7 +6,7 @@ and latency. SuiteResult aggregates metrics across a benchmark.
 
 import asyncio
 
-from the_agents_playbook.claw.evaluation import BenchmarkResult, EvaluationHarness, SuiteResult
+from the_agents_playbook.claw.evaluation import EvaluationHarness
 
 
 async def main():
@@ -14,7 +14,9 @@ async def main():
 
     print("=== Single Evaluation ===")
     harness = EvaluationHarness()
-    result = await harness.evaluate("Read auth.py and list bugs", expected="line 42 bug")
+    result = await harness.evaluate(
+        "Read auth.py and list bugs", expected="line 42 bug"
+    )
     print(f"  Task:       {result.task}")
     print(f"  Success:    {result.success}")
     print(f"  Score:      {result.score}")
@@ -51,12 +53,18 @@ async def main():
     # --- Compare two suites ---
 
     print("=== Suite Comparison ===")
-    suite_a = await EvaluationHarness().run_suite([
-        {"task": "t1", "score": 0.6}, {"task": "t2", "score": 0.7},
-    ])
-    suite_b = await EvaluationHarness().run_suite([
-        {"task": "t1", "score": 0.9}, {"task": "t2", "score": 0.95},
-    ])
+    suite_a = await EvaluationHarness().run_suite(
+        [
+            {"task": "t1", "score": 0.6},
+            {"task": "t2", "score": 0.7},
+        ]
+    )
+    suite_b = await EvaluationHarness().run_suite(
+        [
+            {"task": "t1", "score": 0.9},
+            {"task": "t2", "score": 0.95},
+        ]
+    )
     print(f"  Before: avg_score = {suite_a.avg_score:.2f}")
     print(f"  After:  avg_score = {suite_b.avg_score:.2f}")
     improvement = suite_b.avg_score - suite_a.avg_score

@@ -31,7 +31,9 @@ def main():
     state.add_result(StepResult(step_id="plan", success=True, summary="Created plan"))
     state.add_result(StepResult(step_id="research", success=True, summary="Found bug"))
     state.add_result(StepResult(step_id="implement", success=True, summary="Fixed bug"))
-    state.add_result(StepResult(step_id="test", success=False, error=AssertionError("test failed")))
+    state.add_result(
+        StepResult(step_id="test", success=False, error=AssertionError("test failed"))
+    )
 
     print(f"  Total entries: {len(state.history)}")
     for entry in state.history:

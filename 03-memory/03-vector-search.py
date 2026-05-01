@@ -74,13 +74,16 @@ async def main():
 
     # Show scores
     print("\n=== Scored Search: 'coding preferences' (min_score=0.5) ===")
-    scored = await store.search_by_similarity("coding preferences", top_k=3, min_score=0.5)
+    scored = await store.search_by_similarity(
+        "coding preferences", top_k=3, min_score=0.5
+    )
     for fact, score in scored:
         print(f"  score={score:.4f}  [{fact.source}] {fact.content}")
 
     # Time decay demo
     print("\n=== Time Decay Demo ===")
     import asyncio as aio
+
     print("Storing 'will be old soon' fact...")
     old_fact = Fact(content="This fact is getting old", source="time-demo")
     await store.store(old_fact)

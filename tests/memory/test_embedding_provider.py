@@ -33,7 +33,9 @@ SINGLE_EMBEDDING_RESPONSE = {
 
 @pytest.fixture(autouse=True)
 def _patch_settings():
-    with patch("the_agents_playbook.memory.embedding_provider.settings") as mock_settings:
+    with patch(
+        "the_agents_playbook.memory.embedding_provider.settings"
+    ) as mock_settings:
         mock_settings.embedding_api_key = "test-key"
         mock_settings.embedding_base_url = "https://openrouter.ai/api/v1"
         mock_settings.embedding_model = "openai/text-embedding-3-small"

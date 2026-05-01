@@ -7,7 +7,6 @@ from "what happened".
 
 import asyncio
 import tempfile
-from pathlib import Path
 
 from the_agents_playbook.memory import DualFileMemory, Fact
 
@@ -20,7 +19,9 @@ async def main():
         print("=== Storing Facts ===")
         await memory.store(Fact(content="User prefers Python", source="user"))
         await memory.store(Fact(content="Project uses FastAPI", source="project"))
-        await memory.store(Fact(content="User prefers Python", source="duplicate"))  # dedup
+        await memory.store(
+            Fact(content="User prefers Python", source="duplicate")
+        )  # dedup
 
         # --- Read MEMORY.md ---
         print("\n=== MEMORY.md Contents ===")
@@ -32,7 +33,9 @@ async def main():
         # --- Append raw events to HISTORY.md ---
         print("\n=== Appending History Events ===")
         await memory.store_event("User asked about memory systems", source="user")
-        await memory.store_event("Explained MEMORY.md vs HISTORY.md", source="assistant")
+        await memory.store_event(
+            "Explained MEMORY.md vs HISTORY.md", source="assistant"
+        )
 
         print("HISTORY.md:")
         print(memory.read_history())

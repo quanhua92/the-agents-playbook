@@ -20,7 +20,6 @@ from the_agents_playbook.context import (
     PromptTemplate,
     inject_cwd,
     inject_date,
-    inject_git_status,
 )
 
 
@@ -41,37 +40,46 @@ Rules: be precise, explain reasoning, use tools when needed.""")
 
         builder1 = ContextBuilder()
         builder1.add_static(soul.render())
-        builder1.add_semi_stable(ContextLayer(
-            name="session_context",
-            content="Session started. User is working on a Python project.",
-            priority=LayerPriority.SEMI_STABLE,
-        ))
+        builder1.add_semi_stable(
+            ContextLayer(
+                name="session_context",
+                content="Session started. User is working on a Python project.",
+                priority=LayerPriority.SEMI_STABLE,
+            )
+        )
         builder1.add_dynamic(inject_date())
         builder1.add_dynamic(inject_cwd())
-        builder1.add_dynamic(ContextLayer(
-            name="working_files",
-            content="Active files: main.py, utils.py",
-            priority=LayerPriority.DYNAMIC,
-        ))
+        builder1.add_dynamic(
+            ContextLayer(
+                name="working_files",
+                content="Active files: main.py, utils.py",
+                priority=LayerPriority.DYNAMIC,
+            )
+        )
 
         report1 = builder1.build_report()
         static_tokens_1 = sum(
-            l["tokens"] for l in report1["layer_breakdown"]
-            if l["priority"] == "STATIC"
+            entry["tokens"]
+            for entry in report1["layer_breakdown"]
+            if entry["priority"] == "STATIC"
         )
         dynamic_tokens_1 = sum(
-            l["tokens"] for l in report1["layer_breakdown"]
-            if l["priority"] == "DYNAMIC"
+            entry["tokens"]
+            for entry in report1["layer_breakdown"]
+            if entry["priority"] == "DYNAMIC"
         )
         semi_tokens_1 = sum(
-            l["tokens"] for l in report1["layer_breakdown"]
-            if l["priority"] == "SEMI_STABLE"
+            entry["tokens"]
+            for entry in report1["layer_breakdown"]
+            if entry["priority"] == "SEMI_STABLE"
         )
 
         print("=== Turn 1 ===")
         for info in report1["layer_breakdown"]:
             status = "cached" if info["priority"] == "STATIC" else "computed"
-            print(f"  [{status:8s}] {info['priority']:12s} {info['name']:20s} ~{info['tokens']} tokens")
+            print(
+                f"  [{status:8s}] {info['priority']:12s} {info['name']:20s} ~{info['tokens']} tokens"
+            )
         print(f"  Total: ~{report1['total_tokens']} tokens")
         print()
 
@@ -79,18 +87,22 @@ Rules: be precise, explain reasoning, use tools when needed.""")
 
         builder2 = ContextBuilder()
         builder2.add_static(soul.render())  # Same as turn 1 → cached!
-        builder2.add_semi_stable(ContextLayer(
-            name="session_context",
-            content="Session started. User is working on a Python project.",
-            priority=LayerPriority.SEMI_STABLE,
-        ))
+        builder2.add_semi_stable(
+            ContextLayer(
+                name="session_context",
+                content="Session started. User is working on a Python project.",
+                priority=LayerPriority.SEMI_STABLE,
+            )
+        )
         builder2.add_dynamic(inject_date())  # May have changed
-        builder2.add_dynamic(inject_cwd())    # Same directory
-        builder2.add_dynamic(ContextLayer(
-            name="working_files",
-            content="Active files: main.py, utils.py, test_main.py",  # Updated
-            priority=LayerPriority.DYNAMIC,
-        ))
+        builder2.add_dynamic(inject_cwd())  # Same directory
+        builder2.add_dynamic(
+            ContextLayer(
+                name="working_files",
+                content="Active files: main.py, utils.py, test_main.py",  # Updated
+                priority=LayerPriority.DYNAMIC,
+            )
+        )
 
         report2 = builder2.build_report()
 
@@ -102,18 +114,30 @@ Rules: be precise, explain reasoning, use tools when needed.""")
                 status = "cached ✓"
             else:
                 status = "recomputed"
-            print(f"  [{status:12s}] {info['priority']:12s} {info['name']:20s} ~{info['tokens']} tokens")
+            print(
+                f"  [{status:12s}] {info['priority']:12s} {info['name']:20s} ~{info['tokens']} tokens"
+            )
         print(f"  Total: ~{report2['total_tokens']} tokens")
         print()
 
         # === Summary ===
 
-        static_pct = (static_tokens_1 / report2["total_tokens"] * 100) if report2["total_tokens"] else 0
+        static_pct = (
+            (static_tokens_1 / report2["total_tokens"] * 100)
+            if report2["total_tokens"]
+            else 0
+        )
         cached_total = static_tokens_1 + semi_tokens_1
-        cached_pct = (cached_total / report2["total_tokens"] * 100) if report2["total_tokens"] else 0
+        cached_pct = (
+            (cached_total / report2["total_tokens"] * 100)
+            if report2["total_tokens"]
+            else 0
+        )
 
         print("=== KV Cache Analysis ===")
-        print(f"  Static tokens (always cached):   ~{static_tokens_1} ({static_pct:.0f}%)")
+        print(
+            f"  Static tokens (always cached):   ~{static_tokens_1} ({static_pct:.0f}%)"
+        )
         print(f"  Semi-stable tokens (cached):     ~{semi_tokens_1}")
         print(f"  Total cached:                    ~{cached_total} ({cached_pct:.0f}%)")
         print(f"  Dynamic tokens (recomputed):     ~{dynamic_tokens_1}")

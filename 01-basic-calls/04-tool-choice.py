@@ -142,7 +142,9 @@ async def run():
         else:
             # Model didn't return tool_calls — may not support tools at all.
             # Fall back to parsing content as JSON.
-            logging.warning("No tool_calls in response, falling back to content parsing")
+            logging.warning(
+                "No tool_calls in response, falling back to content parsing"
+            )
             raw_json = message["content"]
 
         review = MovieReview.model_validate_json(raw_json)

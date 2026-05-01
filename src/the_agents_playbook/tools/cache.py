@@ -67,9 +67,7 @@ class ToolResultCache:
         key = self._make_key(tool_name, arguments)
         effective_ttl = ttl if ttl is not None else self._default_ttl
         self._store[key] = (result, monotonic(), effective_ttl)
-        logger.debug(
-            "Cached result for %s (ttl=%.1fs)", key, ttl or self._default_ttl
-        )
+        logger.debug("Cached result for %s (ttl=%.1fs)", key, ttl or self._default_ttl)
 
     def evict_expired(self) -> int:
         """Remove all expired entries. Returns the number evicted."""

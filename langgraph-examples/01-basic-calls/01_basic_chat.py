@@ -13,10 +13,12 @@ def main():
     print("=== ChatOpenAI ===")
     llm = get_openai_llm()
 
-    response = llm.invoke([
-        SystemMessage(content="You are a helpful assistant."),
-        HumanMessage(content="What is the capital of France?"),
-    ])
+    response = llm.invoke(
+        [
+            SystemMessage(content="You are a helpful assistant."),
+            HumanMessage(content="What is the capital of France?"),
+        ]
+    )
 
     print(f"Content:   {response.content}")
     usage = response.usage_metadata or {}
@@ -28,10 +30,12 @@ def main():
     if settings.anthropic_api_key:
         print("\n=== ChatAnthropic ===")
         claude = get_anthropic_llm()
-        response2 = claude.invoke([
-            SystemMessage(content="You are a helpful assistant."),
-            HumanMessage(content="What is 2 + 2?"),
-        ])
+        response2 = claude.invoke(
+            [
+                SystemMessage(content="You are a helpful assistant."),
+                HumanMessage(content="What is 2 + 2?"),
+            ]
+        )
         print(f"Content:   {response2.content}")
         usage2 = response2.usage_metadata or {}
         print(f"Tokens:    {usage2}")

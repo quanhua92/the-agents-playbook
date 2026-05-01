@@ -7,7 +7,6 @@ Run:
 import asyncio
 import numpy as np
 
-from the_agents_playbook import settings
 from the_agents_playbook.memory import OpenAIEmbeddingProvider
 
 

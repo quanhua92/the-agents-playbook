@@ -22,9 +22,10 @@ from typing import Annotated
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
+from typing_extensions import TypedDict
 
 
-class PlanExecuteState(dict):
+class PlanExecuteState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     plan: str
     steps: list[str]
@@ -41,7 +42,9 @@ def planner(state: PlanExecuteState) -> dict:
         "Write the content following the outline",
         "Review and refine the final output",
     ]
-    plan = f"Plan for: {task}\n" + "\n".join(f"{i+1}. {s}" for i, s in enumerate(steps))
+    plan = f"Plan for: {task}\n" + "\n".join(
+        f"{i + 1}. {s}" for i, s in enumerate(steps)
+    )
     print(f"  [PLANNER] Generated plan with {len(steps)} steps")
     return {"plan": plan, "steps": steps, "current_step": 0, "results": []}
 
@@ -65,9 +68,8 @@ def should_continue(state: PlanExecuteState) -> str:
 
 def summarizer(state: PlanExecuteState) -> dict:
     """Summarize execution results."""
-    summary = (
-        f"Completed {len(state['results'])} steps:\n"
-        + "\n".join(f"- {r}" for r in state["results"])
+    summary = f"Completed {len(state['results'])} steps:\n" + "\n".join(
+        f"- {r}" for r in state["results"]
     )
     return {"messages": [AIMessage(content=summary)]}
 
@@ -90,17 +92,19 @@ def main():
     app = graph.compile()
 
     print("=== Plan-and-Execute Workflow ===\n")
-    result = app.invoke({
-        "messages": [HumanMessage(content="Write a blog post about LangGraph")],
-        "plan": "",
-        "steps": [],
-        "current_step": 0,
-        "results": [],
-    })
+    result = app.invoke(
+        {
+            "messages": [HumanMessage(content="Write a blog post about LangGraph")],
+            "plan": "",
+            "steps": [],
+            "current_step": 0,
+            "results": [],
+        }
+    )
 
     print(f"\n=== Plan ===\n{result['plan']}")
 
-    print(f"\n=== Results ===")
+    print("\n=== Results ===")
     for r in result["results"]:
         print(f"  {r}")
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import model_validator
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,9 +21,9 @@ def _find_env_file() -> Path:
     for _ in range(5):
         candidate = current / ".env"
         if candidate.exists():
-            return str(candidate)
+            return candidate
         current = current.parent
-    return ".env"  # fallback, will rely on env vars
+    return Path(".env")  # fallback, will rely on env vars
 
 
 class Settings(BaseSettings):
@@ -98,9 +98,11 @@ def validate_config(cfg: Settings | None = None) -> list[str]:
             "an embedding provider is configured."
         )
 
-    if (cfg.openai_model.startswith("anthropic/")
-            and "anthropic" not in cfg.openai_base_url.lower()
-            and "openrouter" not in cfg.openai_base_url.lower()):
+    if (
+        cfg.openai_model.startswith("anthropic/")
+        and "anthropic" not in cfg.openai_base_url.lower()
+        and "openrouter" not in cfg.openai_base_url.lower()
+    ):
         warnings.append(
             f"OPENAI_MODEL starts with 'anthropic/' but OPENAI_BASE_URL "
             f"({cfg.openai_base_url}) may not route to Anthropic. "
@@ -116,9 +118,10 @@ settings = Settings()
 def get_openai_llm(**overrides):
     """Return a ChatOpenAI instance configured from Settings."""
     from langchain_openai import ChatOpenAI
+
     return ChatOpenAI(
         model=settings.openai_model,
-        api_key=settings.openai_api_key,
+        api_key=SecretStr(settings.openai_api_key) if settings.openai_api_key else None,
         base_url=settings.openai_base_url,
         **overrides,
     )
@@ -127,9 +130,12 @@ def get_openai_llm(**overrides):
 def get_anthropic_llm(**overrides):
     """Return a ChatAnthropic instance configured from Settings."""
     from langchain_anthropic import ChatAnthropic
+
+    if not settings.anthropic_api_key:
+        raise ValueError("ANTHROPIC_API_KEY is required for get_anthropic_llm()")
     return ChatAnthropic(
-        model=settings.anthropic_model,
-        api_key=settings.anthropic_api_key,
+        model_name=settings.anthropic_model,
+        api_key=SecretStr(settings.anthropic_api_key),
         base_url=settings.anthropic_base_url,
         **overrides,
     )

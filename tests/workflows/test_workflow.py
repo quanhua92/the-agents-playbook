@@ -1,18 +1,15 @@
 """Tests for workflows.workflow — DAG validation, execution, concurrency."""
 
-from unittest.mock import AsyncMock
-
-import pytest
-
 from the_agents_playbook.workflows.protocol import BaseStep, StepResult
-from the_agents_playbook.workflows.state import WorkflowState
 from the_agents_playbook.workflows.workflow import Workflow
 
 
 class CountStep(BaseStep):
     """A test step that tracks execution order."""
 
-    def __init__(self, step_id: str, dependencies: list[str] | None = None, fail: bool = False):
+    def __init__(
+        self, step_id: str, dependencies: list[str] | None = None, fail: bool = False
+    ):
         self._id = step_id
         self._deps = dependencies or []
         self._fail = fail
@@ -29,8 +26,17 @@ class CountStep(BaseStep):
     async def run(self, input_data, state):
         self.executed = True
         if self._fail:
-            return StepResult(step_id=self._id, success=False, error=RuntimeError(f"{self._id} failed"))
-        return StepResult(step_id=self._id, success=True, output_data=f"{self._id}_output", updates={f"{self._id}_result": f"{self._id}_output"})
+            return StepResult(
+                step_id=self._id,
+                success=False,
+                error=RuntimeError(f"{self._id} failed"),
+            )
+        return StepResult(
+            step_id=self._id,
+            success=True,
+            output_data=f"{self._id}_output",
+            updates={f"{self._id}_result": f"{self._id}_output"},
+        )
 
 
 class TestValidation:

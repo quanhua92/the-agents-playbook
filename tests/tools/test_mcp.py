@@ -56,11 +56,14 @@ def _jsonrpc_response(request_id: int, result: Any) -> str:
 
 
 def _init_response(request_id: int) -> str:
-    return _jsonrpc_response(request_id, {
-        "protocolVersion": "2024-11-05",
-        "capabilities": {},
-        "serverInfo": {"name": "test-server", "version": "1.0.0"},
-    })
+    return _jsonrpc_response(
+        request_id,
+        {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "serverInfo": {"name": "test-server", "version": "1.0.0"},
+        },
+    )
 
 
 def _tools_list_response(request_id: int, tools: list[dict]) -> str:
@@ -92,10 +95,12 @@ SAMPLE_TOOLS = [
 
 async def test_bridge_start_discovers_tools(monkeypatch):
     """Start the bridge, perform handshake, discover tools."""
-    process = _make_mock_process([
-        _init_response(1),       # response to initialize
-        _tools_list_response(2, SAMPLE_TOOLS),  # response to tools/list
-    ])
+    process = _make_mock_process(
+        [
+            _init_response(1),  # response to initialize
+            _tools_list_response(2, SAMPLE_TOOLS),  # response to tools/list
+        ]
+    )
 
     async def mock_create_subprocess(*args, **kwargs):
         return process
@@ -118,11 +123,13 @@ async def test_bridge_start_discovers_tools(monkeypatch):
 
 async def test_bridge_send_request(monkeypatch):
     """Send a JSON-RPC request and get a response."""
-    process = _make_mock_process([
-        _init_response(1),
-        _tools_list_response(2, []),
-        _jsonrpc_response(3, {"content": "file contents"}),
-    ])
+    process = _make_mock_process(
+        [
+            _init_response(1),
+            _tools_list_response(2, []),
+            _jsonrpc_response(3, {"content": "file contents"}),
+        ]
+    )
 
     async def mock_create_subprocess(*args, **kwargs):
         return process
@@ -136,10 +143,13 @@ async def test_bridge_send_request(monkeypatch):
     await bridge.start()
 
     # Use the internal send_request to call a tool
-    result = await bridge._send_request("tools/call", {
-        "name": "read_file",
-        "arguments": {"path": "/tmp/test.txt"},
-    })
+    result = await bridge._send_request(
+        "tools/call",
+        {
+            "name": "read_file",
+            "arguments": {"path": "/tmp/test.txt"},
+        },
+    )
     assert result["content"] == "file contents"
 
     await bridge.stop()
@@ -147,10 +157,12 @@ async def test_bridge_send_request(monkeypatch):
 
 async def test_mcp_tool_implements_protocol(monkeypatch):
     """Tools discovered via MCP should implement the Tool protocol."""
-    process = _make_mock_process([
-        _init_response(1),
-        _tools_list_response(2, SAMPLE_TOOLS),
-    ])
+    process = _make_mock_process(
+        [
+            _init_response(1),
+            _tools_list_response(2, SAMPLE_TOOLS),
+        ]
+    )
 
     async def mock_create_subprocess(*args, **kwargs):
         return process
@@ -164,6 +176,7 @@ async def test_mcp_tool_implements_protocol(monkeypatch):
     await bridge.start()
 
     from the_agents_playbook.tools.protocol import Tool
+
     tools = bridge.get_tools()
     for tool in tools:
         assert isinstance(tool, Tool)

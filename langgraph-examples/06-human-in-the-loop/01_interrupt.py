@@ -27,13 +27,15 @@ In LangGraph:
 from typing import Annotated
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.types import Command, interrupt
+from typing_extensions import TypedDict
 
 
-class AgentState(dict):
+class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     approved: bool
 
@@ -44,12 +46,14 @@ def review_action(state: AgentState) -> dict:
     interrupt() PAUSES graph execution here. The graph state is saved
     to the checkpoint. Execution resumes when Command(resume=...) is called.
     """
-    user_response = interrupt({
-        "question": "Should the agent proceed with editing README.md?",
-        "risk_level": "WORKSPACE_WRITE",
-        "action": "edit",
-        "target": "README.md",
-    })
+    user_response = interrupt(
+        {
+            "question": "Should the agent proceed with editing README.md?",
+            "risk_level": "WORKSPACE_WRITE",
+            "action": "edit",
+            "target": "README.md",
+        }
+    )
 
     if user_response.get("approved", False):
         return {
@@ -71,14 +75,17 @@ def main():
 
     checkpointer = MemorySaver()
     app = graph.compile(checkpointer=checkpointer)
-    config = {"configurable": {"thread_id": "approval-test"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "approval-test"}}
 
     # --- Step 1: invoke (graph will interrupt) ---
     print("=== Step 1: Invoke (graph interrupts) ===")
     print("Input: request to edit README.md\n")
 
     result = app.invoke(
-        {"messages": [HumanMessage(content="Please edit README.md")], "approved": False},
+        {
+            "messages": [HumanMessage(content="Please edit README.md")],
+            "approved": False,
+        },
         config,
     )
 
@@ -106,7 +113,7 @@ def main():
 
     # --- Step 3: Resume with denial (different thread) ---
     print("\n=== Step 3: Deny (different thread) ===")
-    config2 = {"configurable": {"thread_id": "deny-test"}}
+    config2: RunnableConfig = {"configurable": {"thread_id": "deny-test"}}
 
     partial = app.invoke(
         {"messages": [HumanMessage(content="Delete old_cache.py")], "approved": False},

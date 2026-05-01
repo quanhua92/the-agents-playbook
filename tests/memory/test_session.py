@@ -106,7 +106,9 @@ async def test_list_sessions_missing_dir(session: SessionPersistence, tmp_path: 
     assert sessions == []
 
 
-async def test_preserves_existing_timestamp(session: SessionPersistence, tmp_path: Path):
+async def test_preserves_existing_timestamp(
+    session: SessionPersistence, tmp_path: Path
+):
     path = tmp_path / "session.jsonl"
     ts = "2024-01-01T00:00:00Z"
     await session.save([{"role": "user", "content": "test", "timestamp": ts}], path)
@@ -177,10 +179,7 @@ class TestSessionCompactor:
 
     def test_compact_preserves_recent_exactly(self):
         compactor = SessionCompactor(max_tokens=1, keep_recent=3)
-        msgs = [
-            make_msg("user", f"old msg {i}")
-            for i in range(10)
-        ]
+        msgs = [make_msg("user", f"old msg {i}") for i in range(10)]
         result = compactor.compact(msgs)
         assert len(result) == 4  # 1 summary + 3 recent
         assert result[-1] == msgs[-1]

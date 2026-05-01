@@ -7,9 +7,11 @@ This demonstrates the same concept as run_streaming() in the root
 project's Agent class, but using LangGraph's built-in streaming API.
 """
 
+import asyncio
+
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
-from langgraph.prebuilt import create_react_agent
+from langchain.agents import create_agent
 
 from shared import get_openai_llm
 
@@ -29,15 +31,15 @@ def get_word_length(word: str) -> str:
     return str(len(word))
 
 
-def main():
+async def main():
     print("=== Streaming LangGraph Agent ===\n")
 
     llm = get_openai_llm()
 
-    agent = create_react_agent(
-        model=llm,
+    agent = create_agent(
+        llm,
         tools=[calculate, get_word_length],
-        prompt="You are a helpful assistant. Show your work step by step.",
+        system_prompt="You are a helpful assistant. Show your work step by step.",
     )
 
     task = "What is 123 * 456? Then count the letters in 'supercalifragilistic'."
@@ -45,7 +47,7 @@ def main():
     print("--- Streaming events ---\n")
 
     # Use astream_events for token-level streaming
-    for event in agent.astream_events(
+    async for event in agent.astream_events(
         {"messages": [HumanMessage(content=task)]},
         version="v2",
     ):
@@ -53,17 +55,17 @@ def main():
 
         if kind == "on_chat_model_stream":
             # Text delta
-            chunk = event["data"]["chunk"]
+            chunk = event["data"]["chunk"]  # type: ignore[typeddict-item]
             if chunk.content:
                 print(chunk.content, end="", flush=True)
 
         elif kind == "on_tool_start":
             # Tool call starting
-            print(f"\n\n[tool_call] {event['name']}({event['data'].get('input', {})})")
+            print(f"\n\n[tool_call] {event['name']}({event['data'].get('input', {})})")  # type: ignore[typeddict-item]
 
         elif kind == "on_tool_end":
             # Tool result
-            output = event["data"].get("output", "")
+            output = event["data"].get("output", "")  # type: ignore[typeddict-item]
             print(f"[tool_result] {output}")
 
     print("\n\n=== Stream Complete ===")
@@ -72,4 +74,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

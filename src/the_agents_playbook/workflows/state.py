@@ -21,7 +21,9 @@ class WorkflowState:
         global_memory: Optional persistent memory across the entire workflow.
     """
 
-    history: list[Any] = field(default_factory=list)  # list[StepResult] but avoid circular import
+    history: list[Any] = field(
+        default_factory=list
+    )  # list[StepResult] but avoid circular import
     shared_context: dict[str, Any] = field(default_factory=dict)
     global_memory: BaseMemoryProvider | None = None
 

@@ -16,7 +16,7 @@ def memory(tmp_path: Path) -> DualFileMemory:
 
 def _mock_llm_response(facts_json: str):
     """Create a mock MessageResponse for the consolidation LLM call."""
-    from the_agents_playbook.providers.types import InputMessage, MessageResponse, OutputMessage
+    from the_agents_playbook.providers.types import MessageResponse, OutputMessage
 
     return MessageResponse(
         message=OutputMessage(content=facts_json),
@@ -40,9 +40,7 @@ async def test_consolidation_extracts_facts(tmp_path: Path):
 
     consolidator = LLMConsolidator(memory=memory)
 
-    with patch(
-        "the_agents_playbook.providers.OpenAIProvider"
-    ) as MockProvider:
+    with patch("the_agents_playbook.providers.OpenAIProvider") as MockProvider:
         mock_instance = AsyncMock()
         mock_instance.send_message = AsyncMock(return_value=mock_response)
         mock_instance.close = AsyncMock()
@@ -73,9 +71,7 @@ async def test_consolidation_deduplicates(tmp_path: Path):
 
     consolidator = LLMConsolidator(memory=memory)
 
-    with patch(
-        "the_agents_playbook.providers.OpenAIProvider"
-    ) as MockProvider:
+    with patch("the_agents_playbook.providers.OpenAIProvider") as MockProvider:
         mock_instance = AsyncMock()
         mock_instance.send_message = AsyncMock(return_value=mock_response)
         mock_instance.close = AsyncMock()
@@ -109,9 +105,7 @@ async def test_consolidation_llm_error(tmp_path: Path):
 
     consolidator = LLMConsolidator(memory=memory)
 
-    with patch(
-        "the_agents_playbook.providers.OpenAIProvider"
-    ) as MockProvider:
+    with patch("the_agents_playbook.providers.OpenAIProvider") as MockProvider:
         mock_instance = AsyncMock()
         mock_instance.send_message = AsyncMock(side_effect=RuntimeError("API down"))
         mock_instance.close = AsyncMock()
@@ -130,14 +124,14 @@ async def test_consolidation_truncates_long_history(tmp_path: Path):
     for i in range(50):
         await memory.store_event(f"Event {i}", source="user")
 
-    mock_response = _mock_llm_response('[{"content": "Summary fact", "source": "consolidation"}]')
+    mock_response = _mock_llm_response(
+        '[{"content": "Summary fact", "source": "consolidation"}]'
+    )
 
     # Set a low max to force truncation
     consolidator = LLMConsolidator(memory=memory, max_history_lines=10)
 
-    with patch(
-        "the_agents_playbook.providers.OpenAIProvider"
-    ) as MockProvider:
+    with patch("the_agents_playbook.providers.OpenAIProvider") as MockProvider:
         mock_instance = AsyncMock()
         mock_instance.send_message = AsyncMock(return_value=mock_response)
         mock_instance.close = AsyncMock()

@@ -1,9 +1,8 @@
 """Tests for context/metadata.py — inject_date, inject_cwd, inject_git_status."""
 
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import pytest
 
 from the_agents_playbook.context.metadata import (
     _no_git_layer,
@@ -32,6 +31,7 @@ def test_inject_date_has_valid_date():
     layer = inject_date()
     # Should contain a date in YYYY-MM-DD format
     import re
+
     assert re.search(r"\d{4}-\d{2}-\d{2}", layer.content)
 
 
@@ -76,6 +76,7 @@ async def test_inject_git_status_in_repo():
 async def test_inject_git_status_not_in_repo():
     """Test git status outside a git repo."""
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
         layer = await inject_git_status(repo_root=tmpdir)
         assert layer.content == "Not inside a git repository."

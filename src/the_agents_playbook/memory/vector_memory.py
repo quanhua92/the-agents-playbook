@@ -3,11 +3,9 @@
 import logging
 import math
 from time import monotonic
-from typing import Any
 
-import numpy as np
 
-from ..utils.vectors import cosine_similarity, normalize
+from ..utils.vectors import cosine_similarity
 from .protocol import BaseMemoryProvider, EmbeddingProvider, Fact
 
 logger = logging.getLogger(__name__)

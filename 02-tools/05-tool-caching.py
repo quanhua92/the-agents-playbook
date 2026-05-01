@@ -49,6 +49,7 @@ async def main():
 
     # --- First call: cache miss ---
     import time
+
     start = time.monotonic()
     result = await registry.dispatch("slow_lookup", {"key": key})
     elapsed = time.monotonic() - start
