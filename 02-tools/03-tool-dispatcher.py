@@ -92,17 +92,17 @@ async def main():
     print("\n=== Error handling demos ===")
 
     # Bad JSON arguments
-    result = await dispatcher.dispatch_one(
+    call_id, result = await dispatcher.dispatch_one(
         "reverse_string", "not valid json{{{", "test-id"
     )
     print(f"Bad JSON:    {result.output} (error={result.error})")
 
     # Missing required argument
-    result = await dispatcher.dispatch_one("reverse_string", "{}", "test-id")
+    call_id, result = await dispatcher.dispatch_one("reverse_string", "{}", "test-id")
     print(f"Missing arg: {result.output} (error={result.error})")
 
     # Unknown tool
-    result = await dispatcher.dispatch_one("nonexistent", '{"text":"x"}', "test-id")
+    call_id, result = await dispatcher.dispatch_one("nonexistent", '{"text":"x"}', "test-id")
     print(f"Unknown tool: {result.output} (error={result.error})")
 
     await provider.close()

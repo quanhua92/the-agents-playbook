@@ -1,4 +1,4 @@
-from .settings import Settings, validate_config
+from .settings import Settings, settings, validate_config
 from .agents import AgentDispatcher, AgentRegistry, BaseAgent, WorkerAgent
 from .claw import DegradationManager, RepairLoop, SelfReviewer
 from .context import ContextBuilder, ContextLayer, LayerPriority
@@ -27,6 +27,7 @@ __all__ = [
     "RiskLevel",
     "SelfReviewer",
     "Settings",
+    "settings",
     "StepResult",
     "Tool",
     "ToolResult",
