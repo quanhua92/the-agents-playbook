@@ -103,7 +103,8 @@ def main():
         {
             "messages": [HumanMessage(content="Send the weekly update")],
             "draft_approved": None,
-        }
+        },
+        config={"configurable": {"thread_id": "1"}},
     )
     print(f"Messages: {[m.content for m in result['messages']]}\n")
 
@@ -117,6 +118,13 @@ def main():
 
     # Step 3: Resume with rejection (new thread)
     print("Step 3: New conversation, rejecting this time...")
+    graph.invoke(
+        {
+            "messages": [HumanMessage(content="Send the weekly update")],
+            "draft_approved": None,
+        },
+        config={"configurable": {"thread_id": "2"}},
+    )
     result_rejected = graph.invoke(
         Command(resume="reject"),
         config={"configurable": {"thread_id": "2"}},

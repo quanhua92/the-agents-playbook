@@ -25,22 +25,26 @@ class State(TypedDict):
     subtasks: list[str]
 
 
-def supervisor_node(state: State) -> list[Send]:
-    """Identify subtasks and fan out to workers using Send().
+def supervisor_node(state: State) -> dict:
+    """Identify subtasks and store them in state.
 
-    Send() creates parallel branches, each with its own state.
+    The conditional_edges on this node will fan out via Send().
     """
     task = state["messages"][-1].content if state["messages"] else ""
 
-    # For demo: always fan out to two research workers
     subtasks = [
         f"Research the positive aspects of: {task}",
         f"Research the challenges of: {task}",
     ]
 
+    return {"subtasks": subtasks}
+
+
+def fan_out(state: State) -> list[Send]:
+    """Return Send() objects for parallel fan-out from conditional_edges."""
     return [
         Send("research_worker", {"messages": [HumanMessage(content=st)]})
-        for st in subtasks
+        for st in state["subtasks"]
     ]
 
 
@@ -79,7 +83,8 @@ def build_graph():
     graph.add_node("aggregator", aggregator_node)
 
     graph.add_edge(START, "supervisor")
-    # Send() from supervisor fans out to multiple research_workers
+    # conditional_edges returns Send() for parallel fan-out
+    graph.add_conditional_edges("supervisor", fan_out)
     graph.add_edge("research_worker", "aggregator")
     graph.add_edge("aggregator", END)
 
