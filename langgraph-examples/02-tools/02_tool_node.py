@@ -87,23 +87,34 @@ def main():
     for msg in results:
         print(f"  Tool '{msg.name}' (id={msg.tool_call_id}): {msg.content}")
 
-    # --- Real LLM dispatch ---
-    print("\n=== Real LLM Dispatch ===\n")
+    # --- Real LLM dispatch (full round-trip loop) ---
+    print("\n=== Real LLM Dispatch (Round-Trip Loop) ===\n")
 
     llm = get_openai_llm().bind_tools([get_weather, get_population])
-    response = llm.invoke("What's the weather and population of Tokyo?")
+    messages: list = [HumanMessage(content="What's the weather and population of Tokyo?")]
+    response = llm.invoke(messages)
 
-    if response.tool_calls:
+    while response.tool_calls:
+        messages.append(response)  # AIMessage with tool_calls
+
         print(f"LLM requested {len(response.tool_calls)} tool call(s):")
         for tc in response.tool_calls:
             print(f"  {tc['name']}({tc['args']})")
 
+        # Dispatch -> ToolMessage list
         tool_results = dispatch_tools(tool_map, response)
-        print("\nResults:")
+        print("Tool results:")
         for msg in tool_results:
             print(f"  {msg.name}: {msg.content}")
-    else:
-        print(f"LLM responded directly: {response.content}")
+
+        messages.extend(tool_results)  # Feed ToolMessages back
+
+        # LLM decides: answer now, or call more tools?
+        print("Sending ToolMessages back to LLM...")
+        response = llm.invoke(messages)
+
+    messages.append(response)
+    print(f"\nLLM final answer: {response.content}")
 
     print("\n=== Root Comparison ===")
     print("Root: registry.register(tool) -> registry.dispatch(name, args)")
