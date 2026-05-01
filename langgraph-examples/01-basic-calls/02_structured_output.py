@@ -26,7 +26,7 @@ class MovieReview(BaseModel):
 
 def main():
     llm = get_openai_llm()
-    structured_llm = llm.with_structured_output(MovieReview)
+    structured_llm = llm.with_structured_output(MovieReview, method="function_calling")
 
     review_text = (
         "Avatar (2009) directed by James Cameron. "
