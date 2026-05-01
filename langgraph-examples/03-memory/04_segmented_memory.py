@@ -33,7 +33,6 @@ def recall_memory(query: str, segment: str = "all", top_k: int = 3) -> str:
     from the_agents_playbook.memory import (
         MemoryRecord,
         MemorySegment,
-        MemoryDecay,
     )
 
     # Simulated memory store
@@ -166,10 +165,9 @@ def main():
     # Scenario 3: Show that context memories decay
     print("--- Demonstrating decay ---")
     print("(Context memories have high decay rate, project memories moderate)")
-    from the_agents_playbook.memory import MemoryDecay, MemorySegment
+    from the_agents_playbook.memory import MemoryDecay, MemorySegment, MemoryRecord
 
     decay = MemoryDecay()
-    # Use the same records from recall_memory for demonstration
     segments = [
         ("Identity (permanent)", MemorySegment.IDENTITY),
         ("Expertise (long-term)", MemorySegment.EXPERTISE),
@@ -182,7 +180,6 @@ def main():
     ]
 
     for label, seg in segments:
-        from the_agents_playbook.memory import MemoryRecord
         record = MemoryRecord(content="test", source="test", segment=seg)
         score_30d = decay.score(record, 30)
         score_90d = decay.score(record, 90)
